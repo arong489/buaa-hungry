@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-_&h!)ocw#mpsfqa9fb7ny$(t!qq64if@2m9(xxo#66c!d3azi=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -37,14 +37,22 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'app1.apps.App1Config'
+    'app1.apps.App1Config',
+    'corsheaders',  # 引入cors
 ]
+
+# 前端跨域白名单配置
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:8080"
+]
+CORS_ALLOW_HEADERS = ["*"]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',    # 跨域中间件
     'django.middleware.common.CommonMiddleware',
-    #   'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
