@@ -237,6 +237,7 @@ export default {
       clickBuy,
       toCart
     }
+
   }
 }
 </script>
