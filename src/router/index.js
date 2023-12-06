@@ -6,6 +6,7 @@ import {
     createWebHistory
 } from 'vue-router'
 import HomeView from '../views/myHome/HomeView.vue'
+import HomeviewforRider from "@/views/myHome/HomeviewforRider.vue";
 
 const routes = [{
         path: '/',
@@ -17,6 +18,13 @@ const routes = [{
         name: 'home',
         component: HomeView
     },
+  /////////////////////
+  {
+    path: '/homeRider',
+    name: 'homeRider',
+    component: HomeviewforRider
+  },
+  /////////////////////
     {
         path: '/cart',
         name: 'cart',
@@ -35,6 +43,17 @@ const routes = [{
             isAuth: true
         }
     },
+  ///////////////////////////////////////////////
+  {
+    path: '/mine-rider',
+    name: 'mine-rider',
+    component: () =>
+      import ('../views/mine/MymineRider.vue'),
+    meta: {
+      isAuth: true
+    }
+  },
+  //////////////////////////////////////////////
     {
         path: '/cart',
         name: 'cart',
@@ -53,12 +72,33 @@ const routes = [{
             isAuth: true
         }
     },
+  ///////////////////////////////////////////////////
+  {
+    path: '/rider-order',
+    name: 'rider-order',
+    component: () =>
+      import ('../views/myOrder/RiderOrder.vue'),
+    meta: {
+      isAuth: true
+    }
+  },
+  ///////////////////////////////////////////////////
     {
         path: '/store',
         name: 'store',
         component: () =>
             import ('../views/mystores/MyStore.vue')
     },
+
+  ///////////////////////////////////////////
+  {
+    path: '/store-rider',
+    name: 'store-rider',
+    component: () =>
+      import ('../views/mystores/RiderStore.vue')
+  },
+  ///////////////////////////////////////////
+
     {
         path: '/ordercreate',
         name: 'ordercreate',

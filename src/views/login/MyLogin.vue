@@ -2,15 +2,18 @@
   <div class="login">
     <div class="content">
       <MyHeader title="Login In" />
-      <div class="img">Takeout</div>
       <div>
         <van-form @submit="onSubmit">
           <van-cell-group inset>
-            <van-field v-model="username" name="用户名" label="用户名" placeholder="用户名"
-              :rules="[{ required: true, message: '请填写用户名' }]" />
-            <van-field v-model="identity" name="身份" label="身份" placeholder="学生-1\外卖员-2\食堂-3"
-              :rules="[{ required: true, message: '请填写身份（学生、外卖员、食堂）' }]" />
-            <van-field v-model="password" type="password" name="密码" label="密码" placeholder="密码"
+            <van-field v-model="account" name="account" label="账号" placeholder="账号"
+              :rules="[{ required: true, message: '请填写账号' }]" />
+            <van-field name="identity" v-model="identityStr" label="身份" placeholder="身份" is-link readonly @click="showPicker = true"/>
+
+            <van-popup v-model:show="showPicker" round position="bottom" :show="showPicker">
+              <van-picker title="选择身份" :columns="identifierOptions" @confirm="(value, index)=>{identity = index; identityStr = value;showPicker = false}" @cancel="showPicker = false"/>
+            </van-popup>
+
+            <van-field v-model="password" type="password" name="password" label="密码" placeholder="密码"
               :rules="[{ required: true, message: '请填写密码' }]" />
           </van-cell-group>
           <div style="margin: 66px;">
@@ -29,27 +32,57 @@
 </template>
 
 <script>
-import { reactive, toRefs } from 'vue'
+import { reactive, toRefs, getCurrentInstance } from 'vue'
 import MyHeader from '../../components/MyHeader.vue'
 import { useRouter } from 'vue-router'
 import { Toast } from 'vant'
 export default {
   components: { MyHeader },
-  setup () {
+  setup() {
     const router = useRouter()
     const data = reactive({
-      username: 'abaaba',
-      identity: '1',
-      password: '123456'
+      account: 'abaaba',
+      identity: 0,
+      identityStr: '用户',
+      password: '123456',
+      showPicker: false,
+      identifierOptions: ['用户', '配送员', '食堂']
     })
 
-    // //登录，此处为无条件登录进入主页
-    // const onSubmit = (value) => {
-    //   Toast('登录成功')
-    //   localStorage.setItem('isLogin', 1);
-    //   router.push('/home');
-    // }
+    const currentInstance = getCurrentInstance()
+    const { $axios } = currentInstance.appContext.config.globalProperties
+
+    // 登录，此处为无条件登录进入主页
     const onSubmit = (value) => {
+
+      $axios.request({
+        url: '/login',
+        method: 'POST',
+        data: {
+          account: data.account,
+          identity: data.identity,
+          password: data.password
+        }
+      }).then((back) => {
+        switch (back.status) {
+          case 0:
+            Toast('登录成功')
+            localStorage.setItem('isLogin', 1)
+            localStorage.setItem('token', back.token)
+            router.push('/homeRider')
+            break
+          case 1:
+            Toast('未注册')
+            break
+          case 2:
+            Toast('密码错误')
+            break
+          default:
+            break
+        }
+      })
+    }
+    /* const onSubmit = (value) => {
       if (!localStorage.userInfo) {
         Toast('账号没有注册')
       } else {
@@ -66,7 +99,7 @@ export default {
           Toast('账号错误')
         }
       }
-    }
+    } */
 
     // 注册
     const toRegister = () => {

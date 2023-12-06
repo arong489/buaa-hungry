@@ -52,12 +52,12 @@ export default {
       avatarContent = param.content
     }
 
-    const currentInstance = getCurrentInstance();
-    const { $axios } = currentInstance.appContext.config.globalProperties;
+    const currentInstance = getCurrentInstance()
+    const { $axios } = currentInstance.appContext.config.globalProperties
     // 注册
     const onSubmit = (value) => {
       // const that = this
-      value.img = avatarContent === undefined ? undefined : avatarContent.split(',')[1]
+      value.img = avatarContent === undefined ? '' : avatarContent.split(',')[1]
 
 
       $axios.request({

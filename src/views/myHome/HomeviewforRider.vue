@@ -8,86 +8,78 @@
           校园食堂外卖
           <van-icon name="arrow" />
         </div>
-    </div>
-    <div class="main">
-      <div class="classify">
-        <div class="big_classify">
-          <div v-for="i in big_classify" :key="i.name">
-            <svg class="icon svg-icon" aria-hidden="true">
-              <use :xlink:href="`${i.icon}`"></use>
-            </svg>
-            {{i.name}}
-          </div>
-        </div>
-        <div class="small_classify">
-          <div v-for="(i,index) in small_classify" :key="index">
-            <svg class="icon svg-icon" aria-hidden="true">
-              <use :xlink:href="`${i.icon}`"></use>
-            </svg>
-            {{i.name}}
-          </div>
-        </div>
       </div>
+      <div class="main">
+        <div class="classify">
+          <div class="big_classify">
+            <div v-for="i in big_classify" :key="i.name">
+              <svg class="icon svg-icon" aria-hidden="true">
+                <use :xlink:href="`${i.icon}`"></use>
+              </svg>
+              {{i.name}}
+            </div>
+          </div>
+          <div class="small_classify">
+            <div v-for="(i,index) in small_classify" :key="index">
+              <svg class="icon svg-icon" aria-hidden="true">
+                <use :xlink:href="`${i.icon}`"></use>
+              </svg>
+              {{i.name}}
+            </div>
+          </div>
+        </div>
 
-      <van-tabs class="van-tabs">
-        <van-tab :title="i.tab" v-for="(i,index) in centent_nav_list" :key="index">
-          <MyStore :store_list='i.data'/>
-        </van-tab>
+        <van-tabs class="van-tabs">
+          <van-tab :title="i.tab" v-for="(i,index) in centent_nav_list" :key="index">
+            <RiderStore :store_list='i.data'/>
+          </van-tab>
 
-      </van-tabs>
+        </van-tabs>
+      </div>
     </div>
-    </div>
 
-    <MyFooter />
+    <MyFooterforRider />
 
   </div>
 </template>
 
 <script>
-import MyStore from './components/MyStore.vue'
-import MyFooter from '../../components/MyFooter.vue'
+import RiderStore from './components/RiderStore.vue'
+import MyFooterforRider from '../../components/MyFooterforRider.vue'
 import { reactive, toRefs } from '@vue/reactivity'
 // @ is an alias to /src
 
 export default {
-  name: 'HomeView',
+  name: 'HomeViewforRider',
   components: {
-    MyStore,
-    MyFooter
+    RiderStore,
+    MyFooterforRider
   },
   setup () {
     const data = reactive({
-      centent_nav_list: [
+      centent_nav_list: [                       //此处为提供外卖服务的几个地点的展示
         {
-          tab: '餐厅',
+          tab: '订单',
           data: [
             {
               pic: 'https://5b0988e595225.cdn.sohucs.com/images/20180904/c46bb31bd1b240b792ef2a40816c7b9a.jpeg',
-              title: '沙河餐厅',
-              sales: '36666',
+              title: '沙河订单',
               price: '20',
-              label: ['种类丰富', '价格区间大']
             },
             {
               pic: 'https://img1.baidu.com/it/u=3211807031,2781908075&fm=253&fmt=auto&app=138&f=JPEG?w=667&h=500',
-              title: '学院路学二食堂',
-              sales: '28808',
+              title: '学院路学二订单',
               price: '20',
-              label: ['价格实惠']
             },
             {
               pic: 'https://pic2.zhimg.com/80/v2-265affebcd2c3c966e49afd8a0c3b501_720w.webp',
-              title: '学院路合一食堂',
-              sales: '20231',
+              title: '学院路合一订单',
               price: '20',
-              label: ['种类丰富', '价格实惠']
             },
             {
               pic: 'https://img1.baidu.com/it/u=1313264085,1652997716&fm=253&fmt=auto&app=138&f=JPEG?w=845&h=500',
-              title: '学院路新北食堂',
-              sales: '28898',
+              title: '学院路新北订单',
               price: '20',
-              label: ['集优点于一身']
             }
           ]
         },
@@ -160,7 +152,7 @@ export default {
     display: flex;
     justify-content: space-between;
     padding: 10px;
-     background-image:linear-gradient(#0099cc,#33cccc);
+    background-image:linear-gradient(#0099cc,#33cccc);
   }
 }
 </style>
