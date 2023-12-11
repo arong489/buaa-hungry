@@ -8,34 +8,16 @@
           校园食堂外卖
           <van-icon name="arrow" />
         </div>
-    </div>
-    <div class="main">
-      <div class="classify">
-        <div class="big_classify">
-          <div v-for="i in big_classify" :key="i.name">
-            <svg class="icon svg-icon" aria-hidden="true">
-              <use :xlink:href="`${i.icon}`"></use>
-            </svg>
-            {{i.name}}
-          </div>
-        </div>
-        <div class="small_classify">
-          <div v-for="(i,index) in small_classify" :key="index">
-            <svg class="icon svg-icon" aria-hidden="true">
-              <use :xlink:href="`${i.icon}`"></use>
-            </svg>
-            {{i.name}}
-          </div>
-        </div>
       </div>
+      <div class="main">
 
-      <van-tabs class="van-tabs">
-        <van-tab :title="i.tab" v-for="(i,index) in centent_nav_list" :key="index">
-          <MyStore :store_list='i.data'/>
-        </van-tab>
+        <van-tabs class="van-tabs">
+          <van-tab :title="i.tab" v-for="(i, index) in canteenNavList" :key="index">
+            <MyStore :store_list='i.data' />
+          </van-tab>
 
-      </van-tabs>
-    </div>
+        </van-tabs>
+      </div>
     </div>
 
     <MyFooter />
@@ -47,6 +29,9 @@
 import MyStore from './components/MyStore.vue'
 import MyFooter from '../../components/MyFooter.vue'
 import { reactive, toRefs } from '@vue/reactivity'
+import { onMounted } from 'vue'
+import axios from '../../api/api'
+import { Toast } from 'vant'
 // @ is an alias to /src
 
 export default {
@@ -55,43 +40,27 @@ export default {
     MyStore,
     MyFooter
   },
-  setup () {
+  setup() {
     const data = reactive({
-      centent_nav_list: [
+      canteenNavList: [
         {
           tab: '餐厅',
-          data: [
-            {
-              pic: 'https://5b0988e595225.cdn.sohucs.com/images/20180904/c46bb31bd1b240b792ef2a40816c7b9a.jpeg',
-              title: '沙河餐厅',
-              sales: '36666',
-              price: '20',
-              label: ['种类丰富', '价格区间大']
-            },
-            {
-              pic: 'https://img1.baidu.com/it/u=3211807031,2781908075&fm=253&fmt=auto&app=138&f=JPEG?w=667&h=500',
-              title: '学院路学二食堂',
-              sales: '28808',
-              price: '20',
-              label: ['价格实惠']
-            },
-            {
-              pic: 'https://pic2.zhimg.com/80/v2-265affebcd2c3c966e49afd8a0c3b501_720w.webp',
-              title: '学院路合一食堂',
-              sales: '20231',
-              price: '20',
-              label: ['种类丰富', '价格实惠']
-            },
-            {
-              pic: 'https://img1.baidu.com/it/u=1313264085,1652997716&fm=253&fmt=auto&app=138&f=JPEG?w=845&h=500',
-              title: '学院路新北食堂',
-              sales: '28898',
-              price: '20',
-              label: ['集优点于一身']
-            }
-          ]
-        },
+          data: []
+        }
       ]
+    })
+
+    onMounted(() => {
+      axios.get('/getAllCanteens').then((response) => {
+        switch (response.data.status) {
+          case 0:
+            data.canteenNavList[0].data = response.data.canteens
+            break
+          default:
+            Toast.fail('未知错误')
+            break
+        }
+      })
     })
 
     return {
@@ -103,14 +72,16 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.home{
+.home {
   height: 100%;
   display: flex;
   flex-flow: column;
-  .content{
+
+  .content {
     flex: 1;
     overflow-y: auto;
   }
+
   .main {
     font-size: 12px;
 
@@ -119,15 +90,19 @@ export default {
 
       .small_classify {
         display: flex;
-        flex-wrap: wrap; /** 超出可以换行*/
+        flex-wrap: wrap;
+        /** 超出可以换行*/
         margin-top: 20px;
 
         div {
           display: flex;
           width: 20%;
-          justify-content: center; /**可以水平居中显示 */
-          align-items: center; /*垂直居中*/
-          flex-flow: column; /**方向是垂直方向 */
+          justify-content: center;
+          /**可以水平居中显示 */
+          align-items: center;
+          /*垂直居中*/
+          flex-flow: column;
+          /**方向是垂直方向 */
 
           .svg-icon {
             width: 30px;
@@ -141,11 +116,15 @@ export default {
         display: flex;
 
         div {
-          flex: 1; /** 均分 */
+          flex: 1;
+          /** 均分 */
           display: flex;
-          justify-content: center; /**可以水平居中显示 */
-          align-items: center; /*垂直居中*/
-          flex-flow: column; /**方向是垂直方向 */
+          justify-content: center;
+          /**可以水平居中显示 */
+          align-items: center;
+          /*垂直居中*/
+          flex-flow: column;
+          /**方向是垂直方向 */
 
           .svg-icon {
             width: 50px;
@@ -156,11 +135,12 @@ export default {
       }
     }
   }
-  .header{
+
+  .header {
     display: flex;
     justify-content: space-between;
     padding: 10px;
-     background-image:linear-gradient(#0099cc,#33cccc);
+    background-image: linear-gradient(#0099cc, #33cccc);
   }
 }
 </style>

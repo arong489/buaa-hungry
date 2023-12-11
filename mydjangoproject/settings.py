@@ -45,7 +45,17 @@ INSTALLED_APPS = [
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:8080"
 ]
-CORS_ALLOW_HEADERS = ["*"]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "content-type",
+    "referer",
+    "sec-ch-ua",
+    "sec-ch-ua-mobile",
+    "sec-ch-ua-platform",
+    "token",
+    "user-agent"
+]
+CORS_ALLOW_CREDENTIALS = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -87,7 +97,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'db20375038',
         'USER': '20375038',
-        'PASSWORD' : 'Aa538546',
+        'PASSWORD': 'Aa538546',
         'HOST': '120.46.80.149',
         'PORT': '3306',
     }

@@ -9,10 +9,9 @@ from django.utils.timezone import localtime
 
 from .models import *
 from .tools import *
-from enum import Enum
 # Create your views here.
 SALT = '123'
-DATE_TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+DATE_TIME_FORMAT = '%Y-%m-%d %H:%M'
 class Identity:
     BUYER = 'buyer'
     STAFF = 'staff'
@@ -392,7 +391,7 @@ def change_dish_in_cart(request):
         od.delete()
     else:
         od.num = num
-    od.save()
+        od.save()
     return JsonResponse({'status' : 0})
 
 @check_token(Identity.BUYER)
@@ -420,6 +419,32 @@ def submit_order(request):
     return JsonResponse({'status' : 0})
 
 @check_token(Identity.BUYER)
+def get_buyer_all_orders(request):
+    token = get_token(request)
+    message = token2msg(token)
+    id = message['id']
+    # 获得所有完成的订单
+    orders = Order.objects.filter(buyer_id=id,status__gt=0)
+    #   除了购物车
+    order_list = []
+    for i in orders:
+        #   staff = Staff.objects.get(id=i.staff_id)
+        #   ods = OrderDish.objects.filter(order_id=i.id)
+        status = '未接单' if i.status == 1 else ('配送中' if i.status == 2 else '交易完成')
+        order_list.append({
+            'order_id': i.id,
+            'create_time': localtime(i.create_time).strftime(DATE_TIME_FORMAT),
+            'status' : status
+            #   toString格式
+        })
+
+    return JsonResponse({
+        'status': 0,
+        'orders': order_list
+    }, json_dumps_params={'ensure_ascii': False})
+
+# 已经完成的订单
+@check_token(Identity.BUYER)
 def get_buyer_history_orders(request):
     token = get_token(request)
     message = token2msg(token)
@@ -443,7 +468,7 @@ def get_buyer_history_orders(request):
             #   toString格式
             'staff_id' : staff.id,
             'staff_name' : staff.real_name,
-            'staff_tele' : staff.tele,
+            'staff_tele' : staff.tele
         })
 
     return JsonResponse({
@@ -451,6 +476,31 @@ def get_buyer_history_orders(request):
         'orders' : order_list
     },json_dumps_params={'ensure_ascii': False})
 
+#   配送中的订单
+@check_token(Identity.BUYER)
+def get_buyer_delivery_orders(request):
+    token = get_token(request)
+    message = token2msg(token)
+    id = message['id']
+    orders = Order.objects.filter(buyer_id=id, status=2)
+    order_list = []
+    for i in orders:
+        staff = Staff.objects.get(id=i.staff_id)
+        order_list.append({
+            'id': i.id,
+            'create_time': localtime(i.create_time).strftime(DATE_TIME_FORMAT),
+            'expected_finish_time': localtime(i.expected_finish_time).strftime(DATE_TIME_FORMAT),
+            'staff_id': staff.id,
+            'staff_name': staff.real_name,
+            'staff_tele': staff.tele,
+        })
+
+    return JsonResponse({
+        'status': 0,
+        'orders': order_list
+    })
+
+# 未被接取的订单 可以撤销
 @check_token(Identity.BUYER)
 def get_not_taken_orders(request):
     token = get_token(request)
@@ -732,6 +782,8 @@ def get_canteen_comments(request):
         comment = Comment.objects.get(id=comment_id)
         comments.append({
             'comment_id' : comment_id,
+            'nick_name' : comment.user.nick_name,
+            'img' : comment.user.img,
             'content' : comment.content,
             'create_time' : localtime(comment.create_time).strftime(DATE_TIME_FORMAT),
         })
@@ -755,6 +807,8 @@ def get_dish_comments(request):
         comment = Comment.objects.get(id=comment_id)
         comments.append({
             'comment_id' : comment_id,
+            'nick_name': comment.user.nick_name,
+            'img': comment.user.img.img,
             'content' : comment.content,
             'create_time' : localtime(comment.create_time).strftime(DATE_TIME_FORMAT),
         })
@@ -778,6 +832,8 @@ def get_comment_comments(request):
         comment = Comment.objects.get(id=comment_id)
         comments.append({
             'comment_id': comment.id,
+            'nick_name': comment.user.nick_name,
+            'img': comment.user.img.img,
             'content': comment.content,
             'create_time': localtime(comment.create_time).strftime(DATE_TIME_FORMAT),
         })
@@ -986,6 +1042,10 @@ def favorite_dish(request):
     id = message['id']
     dish_id = data['dish_id']
     note = data['note']
+    if Favorite.objects.filter(user_id=id,dish_id=dish_id).exists():
+        return JsonResponse({
+            'status' : 1 #  已经收藏过
+        })
 
     f = Favorite(user_id=id,dish_id=dish_id,note=note)
     f.save()
@@ -1044,3 +1104,161 @@ def delete_comment(request):
     return JsonResponse({
         'status' : 0
     })
+
+#   append
+@check_token(Identity.BUYER)
+def get_pic_nick(request):
+    token = get_token(request)
+    message = token2msg(token)
+
+    id = message['id']
+    try:
+        buyer = Buyer.objects.get(id=id)
+    except:
+        return JsonResponse({
+            'status' : 1
+        })
+
+    return JsonResponse({
+        'status' : 0,
+        'img' : buyer.img.img,
+        'nick' : buyer.nick_name
+    })
+
+@check_token(Identity.STAFF,Identity.CANTEEN,Identity.BUYER)
+def get_pic(request):
+    token = get_token(request)
+    message = token2msg(token)
+
+    id = message['id']
+    identity = message['identity']
+    if identity is Identity.STAFF:
+        try:
+            staff = Staff.objects.get(id=id)
+        except:
+            return JsonResponse({
+                'status': 1
+            })
+
+        return JsonResponse({
+            'status' :0,
+            'img' : staff.img.img
+        })
+    elif identity is Identity.BUYER:
+        try:
+            buyer = Buyer.objects.get(id=id)
+        except:
+            return JsonResponse({
+                'status': 1
+            })
+
+        return JsonResponse({
+            'status': 0,
+            'img': buyer.img.img
+        })
+    else:
+        try:
+            canteen = Canteen.objects.get(id=id)
+        except:
+            return JsonResponse({
+                'status': 1
+            })
+
+        return JsonResponse({
+            'status': 0,
+            'img': canteen.img.img
+        })
+
+@check_token(Identity.BUYER)
+def delete_favorite(request):
+    token = get_token(request)
+    message = token2msg(token)
+
+    id = message['id']
+    data = json.loads(request.body)
+    dish_id = data['dish_id']
+
+    try:
+        f = Favorite.objects.get(user_id=id,dish_id=dish_id)
+    except:
+        return JsonResponse({
+            'status' : 1 #  之前未收藏过
+        })
+    #   前面校验一下 一个人只能收藏同种菜品一次
+    f.delete()
+    return JsonResponse({
+        'status' : 0
+    })
+
+@check_token(Identity.BUYER)
+def recommend_dishes(request):
+    token = get_token(request)
+    message = token2msg(token)
+
+    id = message['id']
+    data = json.loads(request.body)
+    #   初始化user_tags[i] 保存当前用户每个tag使用次数
+    #   收藏算1次 购买该菜品的次数 * 2
+    #   用tag_id直接当下标
+
+    # tag_items 记录是否某个商品是否打过该标签
+    # 对菜品来做循环 直接用菜品的id当键值 记录每个商品的score
+    # 推荐最大的6个
+    tag_time = {}
+    dish_score = {}
+    tag_id_list = Tag.objects.all().values_list('id',flat=True)
+    #初始化每个tag使用次数
+    for var in tag_id_list:
+        tag_time[var] = 0
+
+    dish_id_list = Dish.objects.all().values_list('id',flat=True)
+    # 初始化每个dish的score
+    for var in dish_id_list:
+        dish_score[var] = 0
+
+    favorite_dish_id_list = Favorite.objects.filter(user_id=id).values_list('dish_id',flat=True)
+    # 得到收藏dish_id 当前user计算每个tag的使用次数
+    for var in favorite_dish_id_list:
+        dish_tag_id_list = TagDish.objects.filter(dish_id=var).values_list('tag_id',flat=True)
+        # dish对应的所有tag的id
+        for tag_id in dish_tag_id_list:
+            tag_time[tag_id] = tag_time[tag_id] + 1
+
+    for var in dish_id_list:
+        #   首先该菜品的tag_id
+        dish_tag_id_list = TagDish.objects.filter(dish_id=var).values_list('tag_id',flat=True)
+        for tag_id in dish_tag_id_list:
+            dish_score[var] = dish_score[var] + tag_time[tag_id]
+
+    dish_score_list = []
+    for key,value in dish_score.items():
+        dish_score_list.append((value,key))
+
+    sort_by_score = sorted(dish_score_list)
+
+    dish_list = []
+
+    cnt = 0
+    for var in sort_by_score:
+        if cnt == 6:
+            break
+        dish_id = var[1]
+        #第二个元素，即key，即dish_id
+        dish = Dish.objects.get(id=dish_id)
+        dish_list.append({
+            'dish_id' : dish_id,
+            'description' : dish.description,
+            'name' : dish.name,
+            'price' : dish.price,
+            'img' : dish.img.img
+        })
+        cnt = cnt + 1
+
+    return JsonResponse({
+        'status' : 0,
+        'dish_list' : dish_list
+    })
+
+
+
+

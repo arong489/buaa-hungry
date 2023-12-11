@@ -1,76 +1,136 @@
 <template>
-  <div class="foot_list" v-if="index === 0">
-    <van-tree-select :main-active-index="activeIndex" height="55vw" :items="items" @click-nav="navClick">
+  <div class="foot_list">
+    <van-tree-select :main-active-index="activeIndex" :items="items" :click-nav="navClick" height="calc(100vh - 264px)">
       <template #content>
-        <div v-for="(i, index) in subItem" :key="index">
-          <FoodAdd :item="i" showadd=true :showsteer=showsteer :onChange=onChange />
-        </div>
+        <van-card v-for="dish of dishes" :title="dish.name" :key="`dish${dish.id}`" :price="dish.price"
+          :desc="dish.description" :thumb="dish.img">
+          <template #num>
+            <van-stepper v-model="dishCounts[dish.id]" theme="round" min="0" default-value="0" :integer="true"
+              button-size="22" @change="onChange(dish.id)" @plus="cartNum++" @minus="cartNum--" />
+          </template>
+        </van-card>
       </template>
     </van-tree-select>
+    <van-action-bar>
+      <van-action-bar-icon icon="cart-o" text="购物车" :badge="cartNum" @click="toCart" />
+      <van-action-bar-button type="warning" text="加入购物车" @click="AddCart()" />
+      <van-action-bar-button type="danger" text="立即购买" @click="AddCart(true)" />
+    </van-action-bar>
   </div>
-  <div v-else>{{ foodData.content }}</div>
 </template>
 
 <script>
 import { reactive, toRefs } from '@vue/reactivity'
-import FoodAdd from '../../../components/FoodAdd.vue'
-export default {
-  components: {
-    FoodAdd
-  },
-  props: ['foodData', 'index'],
-  setup(props) {
-    const data = reactive({
-      items: [],
-      activeIndex: 0,
-      subItem: []
-    })
+// import FoodAdd from '../../../components/FoodAdd.vue'
+import { ref, onMounted } from 'vue'
+import axios from '../../../api/api.js'
+import { Toast } from 'vant'
+import { useRouter } from 'vue-router'
 
-    const init = () => {
-      const newList = []
-      console.log(props.foodData.items)
-      props.foodData?.items?.map((i, index) => {
-        newList.push({ text: i.text }) // 左侧标题
-        data.items = newList
-        if (data.activeIndex === index) {
-          data.subItem = i.children
-        }
-      })
-    }
-    init()
+export default {
+  props: ['canteensInf', 'modelValue'],
+  emits: ['update:modelValue'],
+  setup(props, ctx) {
+    const data = reactive({
+      items: props.canteensInf.map((canteenInf) => ({ text: canteenInf.location })),
+      activeIndex: 0,
+      dishes: [],
+      dishCounts: {},
+      cartNum: 0
+      // subItem: []
+    })
+    const router = useRouter()
 
     // 点击左侧导航
     const navClick = (i) => {
-      // console.log(i)
-      data.activeIndex = i
-      init()
-    }
-
-    // 切换步进器
-    const showsteer = (i) => {
-      data.subItem.forEach(item => {
-        if (item.id === i) {
-          item.add = false
-          item.num += 1
+      axios.post('/getAvDishes', { data: { id: props.canteensInf[i].id } }).then((response) => {
+        switch (response.data.status) {
+          case 0:
+            data.dishes = response.data.dishes
+            response.data.dishes.forEach((dish) => {
+              data.dishCounts[dish.id] += 0
+            })
+            break
+          default:
+            Toast.fail('未知错误')
+            break
         }
+      }).catch((error) => {
+        Toast.fail('请求异常')
+        console.log(error)
       })
     }
 
-    // 步进器增加触发事件
-    const onChange = (value, detail) => { // detail是取得步进器中name中的数据
-      data.subItem.forEach(item => {
-        if (item.id === detail.name) {
-          item.num = value // value是真实的数据
-        }
-        console.log(data.subItem)
-      })
+    function toCart() {
+      router.push('./cart')
     }
+
+    function AddCart(router) {
+      Object.keys(props.modelValue).forEach(key => {
+        axios.post('/addDishToOrder', {
+          dish_id: key,
+          num: props.modelValue[key]
+        }).then((response) => {
+          if (response.data.status !== 0) {
+            Toast.fail('未知错误')
+          }
+        })
+        data.dishCounts[key] = 0
+      })
+      // 清空
+      data.cartNum = 0
+      ctx.emit('update:modelValue', {})
+      // 是否直接去购买
+      if (router === true) {
+        router.push('./cart')
+      }
+    }
+
+    function onChange(dishId) {
+      event.stopPropagation()
+      const emitValue = props.modelValue
+      if (data.dishCounts[dishId] === 0) {
+        delete emitValue[dishId]
+      } else {
+        emitValue[dishId] = data.dishCounts[dishId]
+      }
+
+      ctx.emit('update:modelValue', emitValue)
+    }
+
+    onMounted(async () => {
+      if (props.canteensInf.length !== 0) {
+        axios.request({
+          url: '/getAvDishes',
+          method: 'post',
+          data: {
+            id: props.canteensInf[data.activeIndex].id
+          }
+        }).then((response) => {
+          switch (response.data.status) {
+            case 0:
+              data.dishes = response.data.dishes
+              response.data.dishes.forEach((dish) => {
+                if (!(dish.id in data.dishCounts)) {
+                  data.dishCounts[dish.id] = 0
+                }
+              })
+              break
+            default:
+              Toast.fail('未知错误')
+              break
+          }
+        })
+      }
+      console.log('mount food list')
+    })
 
     return {
       ...toRefs(data),
       navClick,
-      showsteer,
-      onChange
+      onChange,
+      AddCart,
+      toCart
     }
   }
 }

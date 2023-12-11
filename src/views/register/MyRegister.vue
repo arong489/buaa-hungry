@@ -101,7 +101,7 @@ export default {
     // 注册
     const onSubmit = (value) => {
       // const that = this
-      value.img = avatarContent === undefined ? '' : avatarContent.split(',')[1]
+      value.img = avatarContent === undefined ? '' : avatarContent
       $axios.request({
         url: '/buyerRegister',
         method: 'POST',

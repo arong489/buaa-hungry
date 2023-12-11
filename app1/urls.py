@@ -58,5 +58,14 @@ urlpatterns = [
     path('getHistoryComment',views.get_history_comment),
     path('getReply',views.get_reply),
     path('staffGetComments',views.staff_get_comments),
-    path('canteenGetComments',views.canteen_get_comments)
+    path('canteenGetComments',views.canteen_get_comments),
+
+    #   append
+    path('deleteFavorite',views.delete_favorite),
+    path('getPicNick',views.get_pic_nick),
+    path('recommendDishes',views.recommend_dishes),
+    path('getPic',views.get_pic),
+    path('getBuyerDeliveryOrders',views.get_buyer_history_orders),#  配送中
+    path('getBuyerAllOrders',views.get_buyer_all_orders)#全部订单
+
 ]
