@@ -43,16 +43,6 @@ const routes = [{
     isAuth: true
   }
 },
-/// ////////////////////////////////////////////
-{
-  path: '/mine-rider',
-  name: 'mine-rider',
-  component: () =>
-    import('../views/mine/MymineRider.vue'),
-  meta: {
-    isAuth: true
-  }
-},
 /// ///////////////////////////////////////////
 {
   path: '/cart',
@@ -68,16 +58,6 @@ const routes = [{
   name: 'order',
   component: () =>
     import('../views/myOrder/MyOrder.vue'),
-  meta: {
-    isAuth: true
-  }
-},
-/// ////////////////////////////////////////////////
-{
-  path: '/rider-order',
-  name: 'rider-order',
-  component: () =>
-    import('../views/myOrder/RiderOrder.vue'),
   meta: {
     isAuth: true
   }

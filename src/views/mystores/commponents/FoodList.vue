@@ -65,7 +65,7 @@ export default {
       router.push('./cart')
     }
 
-    function AddCart(router) {
+    function AddCart(jump) {
       Object.keys(props.modelValue).forEach(key => {
         axios.post('/addDishToOrder', {
           dish_id: key,
@@ -81,7 +81,7 @@ export default {
       data.cartNum = 0
       ctx.emit('update:modelValue', {})
       // 是否直接去购买
-      if (router === true) {
+      if (jump === true) {
         router.push('./cart')
       }
     }

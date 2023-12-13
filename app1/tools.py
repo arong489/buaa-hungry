@@ -1,12 +1,12 @@
 import jwt
 import time
-
 from django.http import HttpRequest, JsonResponse
-
 
 
 SALT = '123'
 #   identity是str
+
+
 def msg2token(num, identity):
     source = {
         'id': num,
@@ -43,23 +43,24 @@ def get_token(request: HttpRequest):
         #   return status : -1
         return None
 
+
 def check_token(*args):
     legal_identity = args
 
     #   试一下
     def check_token_(func):
-        def wrapper(arg : HttpRequest):
-            assert isinstance(arg,HttpRequest)
+        def wrapper(arg: HttpRequest):
+            assert isinstance(arg, HttpRequest)
             token = get_token(arg)
             print(token)
             try:
                 msg = token2msg(token)
                 print(msg)
             except jwt.ExpiredSignatureError:
-                return JsonResponse({'status' : -2})
+                return JsonResponse({'status': -2})
             except jwt.DecodeError:
                 print(-1)
-                return JsonResponse({'status' : -1})
+                return JsonResponse({'status': -1})
 
             print(legal_identity)
             if msg['identity'] in legal_identity:

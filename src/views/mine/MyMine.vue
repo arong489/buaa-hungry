@@ -4,10 +4,12 @@
     <div class="content">
       <div class="user-info">
         <div class="info">
-          <img src="../../assets/user.svg" />
+          <img :src="avatar.length > 0 ? avatar : '../../assets/user.svg'" @click="changeAvatar" />
+          <van-uploader ref="uploader" max-count="1" v-show="false" v-model="avatarFile" :preview-image="false"
+            :after-read="saveContent" @oversize="() => { alert('图片过大') }" />
           <div class="user-desc">
             <span>
-              <h2>昵称：</h2>{{ name }}
+              <h2>{{ name }}</h2>
             </span>
           </div>
         </div>
@@ -15,10 +17,6 @@
       <ul class="user-list">
         <li class="van-hairline--bottom" @click="togo('./order')">
           <span>订单记录</span>
-          <van-icon name="arrow" />
-        </li>
-        <li class="van-hairline--bottom" @click="togo('./address')">
-          <span>地址管理</span>
           <van-icon name="arrow" />
         </li>
         <li class="van-hairline--bottom" @click="togo('./userinfoedit')">
@@ -40,24 +38,59 @@ import { reactive, toRefs } from '@vue/reactivity'
 import MyFooter from '../../components/MyFooter.vue'
 import MyHeader from '../../components/MyHeader.vue'
 import { useRouter } from 'vue-router'
+import axios from '../../api/api'
+import { onMounted, ref } from 'vue'
+import { Toast } from 'vant'
 export default {
   components: {
     MyFooter,
     MyHeader
   },
-  setup () {
+  setup() {
     const router = useRouter()
     const data = reactive({
-      name: ''
+      name: '',
+      avatar: '',
+      avatarFile: []
     })
+
+    const uploader = ref(null)
 
     const togo = (path) => {
       router.push(path)
     }
 
+    function changeAvatar() {
+      uploader.value.chooseFile()
+    }
+
+    function saveContent() {
+      axios.put('/resetPic', {
+        img: data.avatarFile[0].content
+      }).then((response) => {
+        if (response.data.status !== 0) {
+          Toast.fail('头像修改失败')
+          data.avatarFile = []
+        } else {
+          data.avatar = data.avatarFile[0].content
+          data.avatarFile = []
+        }
+      })
+    }
+
+    onMounted(() => {
+      axios.get('/getPicNick').then((response) => {
+        data.name = response.data.nick
+        data.avatar = response.data.img
+      })
+    })
+
     return {
       ...toRefs(data),
-      togo
+      togo,
+      changeAvatar,
+      uploader,
+      saveContent
     }
   }
 }
@@ -91,7 +124,7 @@ export default {
 
         img {
           border-radius: 50%;
-          margin-top: 4px;
+          // margin-top: 4px;
         }
 
         .user-desc {
@@ -144,4 +177,5 @@ export default {
       }
     }
   }
-}</style>
+}
+</style>

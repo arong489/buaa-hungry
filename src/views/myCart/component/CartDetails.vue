@@ -118,6 +118,9 @@ export default {
         if (response.data.status === 0) {
           data.totalPrice = Number(response.data.total_price)
           data.dishes = response.data.dishes
+        } else if (response.data.status === 1) {
+          data.totalPrice = 0
+          data.dishes = []
         } else {
           Toast.fail('未知错误')
         }
