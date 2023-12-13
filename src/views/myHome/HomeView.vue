@@ -56,6 +56,8 @@ export default {
           case 0:
             data.canteenNavList[0].data = response.data.canteens
             break
+          case -2:
+            break
           default:
             Toast.fail('未知错误')
             break

@@ -371,7 +371,8 @@ def get_cart(request):
             'name': dish.name,
             'num': i.num,
             'price': dish.price,
-            'img': dish.img.img
+            'description': dish.description,
+            'img': dish.img.img,
 
         })
 
@@ -469,12 +470,15 @@ def get_buyer_all_orders(request):
         #   ods = OrderDish.objects.filter(order_id=i.id)
         status = '未接单' if i.status == 1 else (
             '配送中' if i.status == 2 else '交易完成')
+        #   res = get_order_info_(i.id)
         order_list.append({
             'order_id': i.id,
             'create_time': localtime(i.create_time).strftime(DATE_TIME_FORMAT),
             'status': status,
-            'destination': i.destination
+            'destination': i.destination,
             #   toString格式
+            #   'total_price' : res[1],
+            #   'dishes' : res[0]
         })
 
     return JsonResponse({
@@ -503,6 +507,7 @@ def get_buyer_history_orders(request):
     for i in orders:
         staff = Staff.objects.get(id=i.staff_id)
         #   ods = OrderDish.objects.filter(order_id=i.id)
+        #   res = get_order_info_(i.id)
         order_list.append({
             'order_id': i.id,
             'create_time': localtime(i.create_time).strftime(DATE_TIME_FORMAT),
@@ -511,7 +516,9 @@ def get_buyer_history_orders(request):
             'destination': i.destination,
             'staff_id': staff.id,
             'staff_name': staff.real_name,
-            'staff_tele': staff.tele
+            'staff_tele': staff.tele,
+            #   'total_price' : res[1],
+            #   'dishes' : res[0]
         })
 
     return JsonResponse({
@@ -531,6 +538,7 @@ def get_buyer_delivery_orders(request):
     order_list = []
     for i in orders:
         staff = Staff.objects.get(id=i.staff_id)
+        #   res = get_order_info_(i.id)
         order_list.append({
             'id': i.id,
             'create_time': localtime(i.create_time).strftime(DATE_TIME_FORMAT),
@@ -539,6 +547,8 @@ def get_buyer_delivery_orders(request):
             'staff_id': staff.id,
             'staff_name': staff.real_name,
             'staff_tele': staff.tele,
+            #   'total_price': res[1],
+            #   'dishes': res[0]
         })
 
     return JsonResponse({
@@ -565,11 +575,14 @@ def get_not_taken_orders(request):
     orders = Order.objects.filter(buyer_id=id, status=1)
     order_list = []
     for i in orders:
+        #   res = get_order_info_(i.id)
         order_list.append({
             'id': i.id,
             'destination': i.destination,
             'create_time': localtime(i.create_time).strftime(DATE_TIME_FORMAT),
-            'expected_finish_time': localtime(i.expected_finish_time).strftime(DATE_TIME_FORMAT)
+            'expected_finish_time': localtime(i.expected_finish_time).strftime(DATE_TIME_FORMAT),
+            #   'total_price': res[1],
+            #   'dishes': res[0]
         })
 
     return JsonResponse({
@@ -629,6 +642,7 @@ def get_orders(request):
             'order_id': i.id,
             'total_price': str(total_price),
             'destination': i.destination,
+            'buyer_tele': i.buyer.tele,
             'expected_finish_time': localtime(i.expected_finish_time).strftime(DATE_TIME_FORMAT)
         })
 
@@ -678,6 +692,7 @@ def get_staff_history_order(request):
         orders.append({
             'order_id': i.id,
             'finish_time': localtime(i.finish_time).strftime(DATE_TIME_FORMAT),
+            'buyer_tele': i.buyer.tele,
             'destination': i.destination
         })
 
@@ -700,7 +715,8 @@ def get_delivery_order(request):
         orders.append({
             'order_id': i.id,
             'expected_finish_time': localtime(i.expected_finish_time).strftime(DATE_TIME_FORMAT),
-            'destination': i.destination
+            'destination': i.destination,
+            'buyer_tele': i.buyer.tele
         })
 
     return JsonResponse({
@@ -1389,6 +1405,7 @@ def get_order_info(request):
         dishes.append({
             'name': dish.name,
             'num': j['num'],
+            'description': dish.description,
             'img': dish.img.img,
             'price': dish.price
         })
@@ -1411,3 +1428,82 @@ def get_order_info(request):
         'dishes': dishes,
         'destination': order.destination,
     }, json_dumps_params={'ensure_ascii': False})
+
+
+def get_order_info_(order_id: int):
+    order = Order.objects.get(id=order_id)
+    total_price = Decimal("0")
+    dish_list = OrderDish.objects.filter(
+        order_id=order_id).values('dish_id', 'num')
+    dishes = []
+    for j in dish_list:
+        dish = Dish.objects.get(id=j['dish_id'])
+        total_price += dish.price * j['num']
+        dishes.append({
+            'name': dish.name,
+            'num': j['num'],
+            'img': dish.img.img,
+            'price': dish.price
+        })
+    return [dishes, total_price]
+
+
+@check_token(Identity.BUYER)
+def judge_favorite(request):
+    token = get_token(request)
+    message = token2msg(token)
+    id = message['id']
+    data = json.loads(request.body)
+
+    dish_id = data['dish_id']
+
+    if Favorite.objects.filter(user_id=id, dish_id=dish_id).exists():
+        return JsonResponse({
+            'status': 0,
+            'exist': True
+        })
+
+    return JsonResponse({
+        'status': 0,
+        'exist': False
+    })
+
+
+@check_token(Identity.CANTEEN)
+def get_canteen_info(request):
+    '''
+    "tele" : 119,
+"password" : "123456",
+"again" : "123456",
+"img" : "",
+"description" : "好吃",
+"location" : "新北",
+    '''
+
+    token = get_token(request)
+    msg = token2msg(token)
+    id = msg['id']
+    canteen = Canteen.objects.get(id=id)
+    return JsonResponse({
+        'status': 0,
+        'tele': canteen.tele,
+        'img': canteen.img.img,
+        'description': canteen.description,
+        'location': canteen.location
+    })
+
+
+@check_token(Identity.STAFF)
+def get_staff_info(request):
+    token = get_token(request)
+    msg = token2msg(token)
+    id = msg['id']
+    #   canteen = Canteen.objects.get(id=id)
+    staff = Staff.objects.get(id=id)
+    return JsonResponse({
+        'status': 0,
+        'tele': staff.tele,
+        'img': staff.img.img,
+        'description': staff.description,
+        'location': staff.location
+    })

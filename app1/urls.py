@@ -67,6 +67,9 @@ urlpatterns = [
     path('getPic', views.get_pic),
     path('getBuyerDeliveryOrders', views.get_buyer_history_orders),  # 配送中
     path('getBuyerAllOrders', views.get_buyer_all_orders),  # 全部订单
-    path('getOrderInfo', views.get_order_info)
+    path('getOrderInfo', views.get_order_info),
+    path('judgeFavorite', views.judge_favorite),
+    path('getCanteenInfo', views.get_canteen_info),
+    path('getStaffInfo', views.get_staff_info)
 
 ]

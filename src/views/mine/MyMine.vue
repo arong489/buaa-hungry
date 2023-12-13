@@ -124,6 +124,7 @@ export default {
 
         img {
           border-radius: 50%;
+          aspect-ratio: 1;
           // margin-top: 4px;
         }
 

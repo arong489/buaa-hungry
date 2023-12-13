@@ -5,7 +5,7 @@
       <van-tabs>
         <van-tab title="全部" :key="navData.length">
           <div v-if="allOrders > 0" style="margin-top: var(--van-padding-xs);">
-            <van-card v-for="order in orderData[0]" :key="order.id">
+            <van-card v-for="(order, index) in orderData[0]" :key="order.id" @click="showOrderDetail(0, index)">
               <template #title>
                 <p><strong>目的地: </strong>{{ order.destination }}</p>
               </template>
@@ -16,7 +16,7 @@
                 <van-tag type="primary">未接单</van-tag>
               </template>
             </van-card>
-            <van-card v-for="order in orderData[1]" :key="order.id">
+            <van-card v-for="(order, index) in orderData[1]" :key="order.id" @click="showOrderDetail(1, index)">
               <template #title>
                 <p><strong>目的地: </strong>{{ order.destination }}</p>
               </template>
@@ -31,7 +31,7 @@
                 <van-tag type="waring">配送中</van-tag>
               </template>
             </van-card>
-            <van-card v-for="order in orderData[2]" :key="order.id">
+            <van-card v-for="(order, index) in orderData[2]" :key="order.id" @click="showOrderDetail(2, index)">
               <template #title>
                 <p><strong>目的地: </strong>{{ order.destination }}</p>
               </template>
@@ -51,7 +51,8 @@
         </van-tab>
         <van-tab :title="value" v-for="(value, index) in navData" :key="index">
           <div v-if="orderData[index].length > 0">
-            <van-card v-for="order in orderData[index]" :key="order.id">
+            <van-card v-for="(order, orderIndex) in orderData[index]" :key="order.id"
+              @click="showOrderDetail(index, orderIndex)">
               <template #title>
                 <p><strong>目的地: </strong>{{ order.destination }}</p>
               </template>
@@ -69,6 +70,10 @@
           <van-empty description="没有订单" v-else />
         </van-tab>
       </van-tabs>
+      <van-popup v-model:show="showDetail" round position="bottom" :close-on-click-overlay='false'
+        @click-overlay="showDetail = false">
+        <OrderDetail :order="orderDetail" />
+      </van-popup>
     </div>
     <MyFooter />
   </div>
@@ -80,24 +85,33 @@ import MyFooter from '../../components/MyFooter.vue'
 import MyHeader from '../../components/MyHeader.vue'
 import { useStore } from 'vuex'
 import { onMounted, computed } from 'vue'
-import axios from 'axios'
+import axios from '../../api/api'
 import { Toast } from 'vant'
+import OrderDetail from '@/components/OrderDetail.vue'
 
 export default {
   components: {
     MyFooter,
-    MyHeader
+    MyHeader,
+    OrderDetail
   },
 
   setup() {
     const store = useStore()
     const data = reactive({
       navData: ['未接单', '配送中', '交易完成'],
-      orderData: [[], [], []]
+      orderData: [[], [], []],
+      showDetail: false,
+      orderDetail: {}
     })
 
     const tabClick = (i) => {
       console.log(i)
+    }
+
+    function showOrderDetail(type, index) {
+      data.orderDetail = data.orderData[type][index]
+      data.showDetail = true
     }
 
     onMounted(() => {
@@ -142,6 +156,7 @@ export default {
       ...toRefs(data),
       store,
       tabClick,
+      showOrderDetail,
       allOrders
     }
   }

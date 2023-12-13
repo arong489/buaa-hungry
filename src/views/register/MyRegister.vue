@@ -27,8 +27,8 @@
           <van-field v-model="passcheck" name="again" label="重复密码" type="password" placeholder="请再次输入密码"
             :rules="[{ required: true, message: '请再次输入密码' }]" />
 
-          <van-field v-if="isCanteen" v-model="description" rows="1" autosize label="描述" type="textarea"
-            placeholder="食堂描述" />
+          <van-field v-if="identity === '食堂'" v-model="description" rows="1" autosize label="描述" type="textarea"
+            name="description" placeholder="食堂描述" />
           <div style="margin:16px">
             <van-button type="primary" native-type="submit" size="large" round style="margin-bottom:10px">注册</van-button>
             <van-button type="primary" size="large" round @click="toLogin">返回</van-button>
@@ -60,7 +60,6 @@ export default {
     const identifierOptions = ['用户', '配送员', '食堂']
     const identity = ref('用户')
     const nameFieldArray = ref(['nick', '用户名', '请输入用户名'])
-    const isCanteen = ref(false)
     const description = ref('')
     let avatarContent
 
@@ -85,15 +84,12 @@ export default {
       switch (index) {
         case 0:
           nameFieldArray.value = ['nick', '用户名', '请输入用户名']
-          isCanteen.value = false
           break
         case 1:
           nameFieldArray.value = ['real_name', '配送员名', '请输入姓名']
-          isCanteen.value = false
           break
         default:
           nameFieldArray.value = ['location', '地址', '请输入地址']
-          isCanteen.value = true
           break
       }
     }
@@ -102,8 +98,10 @@ export default {
     const onSubmit = (value) => {
       // const that = this
       value.img = avatarContent === undefined ? '' : avatarContent
+      delete value.undefined
+      const requestUrl = identity.value === '用户' ? '/buyerRegister' : identity.value === '食堂' ? '/canteenRegister' : '/staffRegister'
       $axios.request({
-        url: '/buyerRegister',
+        url: requestUrl,
         method: 'POST',
         data: value
       }).then((response) => {
@@ -121,7 +119,7 @@ export default {
             Toast('密码不一致')
             break
           default:
-            Toast('为止错误')
+            Toast('未知错误')
             break
         }
       })
@@ -145,7 +143,6 @@ export default {
       identifierOptions,
       identity,
       nameFieldArray,
-      isCanteen,
       description,
       saveContent,
       changeRegister

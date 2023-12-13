@@ -3,7 +3,6 @@
     <div class="content">
       <MyHeader title="账号管理" />
       <div style="height: 10vh;"></div>
-      <van-field v-model="nickname" type="text" label="昵称" readonly />
       <van-field v-model="pwdOld" type="password" label="旧密码" />
       <van-field v-model="pwdNew" type="password" label="新密码" />
       <van-field v-model="pwdAgain" type="password" label="重复新密码" />
@@ -20,28 +19,20 @@ import { reactive, toRefs } from '@vue/reactivity'
 import MyHeader from '../../components/MyHeader.vue'
 import { useRouter } from 'vue-router'
 import { Toast } from 'vant'
-import { onMounted } from 'vue'
 import axios from '../../api/api'
 export default {
   components: { MyHeader },
   setup() {
     const router = useRouter()
     const data = reactive({
-      nickname: '',
       pwdOld: '',
       pwdNew: '',
       pwdAgain: ''
     })
 
-    onMounted(() => {
-      axios.get('/getPicNick').then(response => {
-        data.nickname = response.data.nick
-      })
-    })
-
     // 保存
     const submit = () => {
-      if (data.nickname && data.pwdOld && data.pwdAgain && data.pwdNew) {
+      if (data.pwdOld && data.pwdAgain && data.pwdNew) {
         axios.put('/resetPassword', {
           old: data.pwdOld,
           new: data.pwdNew,

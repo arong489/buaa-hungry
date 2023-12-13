@@ -1,14 +1,17 @@
 <template>
   <div class="foot_list">
-    <van-tree-select :main-active-index="activeIndex" :items="items" :click-nav="navClick" height="calc(100vh - 264px)">
+    <van-tree-select :main-active-index="activeIndex" :items="items" @click-nav="navClick" height="calc(100vh - 264px)">
       <template #content>
-        <van-card v-for="dish of dishes" :title="dish.name" :key="`dish${dish.id}`" :price="dish.price"
-          :desc="dish.description" :thumb="dish.img">
-          <template #num>
-            <van-stepper v-model="dishCounts[dish.id]" theme="round" min="0" default-value="0" :integer="true"
-              button-size="22" @change="onChange(dish.id)" @plus="cartNum++" @minus="cartNum--" />
-          </template>
-        </van-card>
+        <div v-if="dishes.length > 0">
+          <van-card v-for="dish of dishes" :title="dish.name" :key="`dish${dish.id}`" :price="dish.price"
+            :desc="dish.description" :thumb="dish.img">
+            <template #num>
+              <van-stepper v-model="dishCounts[dish.id]" theme="round" min="0" default-value="0" :integer="true"
+                button-size="22" @change="onChange(dish.id)" @plus="cartNum++" @minus="cartNum--" />
+            </template>
+          </van-card>
+        </div>
+        <van-empty v-else description="暂无菜品" />
       </template>
     </van-tree-select>
     <van-action-bar>
@@ -43,10 +46,11 @@ export default {
 
     // 点击左侧导航
     const navClick = (i) => {
-      axios.post('/getAvDishes', { data: { id: props.canteensInf[i].id } }).then((response) => {
+      axios.post('/getAvDishes', { id: props.canteensInf[i].id }).then((response) => {
         switch (response.data.status) {
           case 0:
             data.dishes = response.data.dishes
+            data.activeIndex = i
             response.data.dishes.forEach((dish) => {
               data.dishCounts[dish.id] += 0
             })
