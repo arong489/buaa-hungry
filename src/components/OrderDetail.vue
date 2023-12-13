@@ -28,7 +28,10 @@
       </van-field>
     </span>
   </p>
-  <van-divider />
+
+  <van-button style="float: right;margin-right: 3%;" v-if="buttonText.length > 0" type="primary" @click="onClick">{{
+    buttonText }}</van-button>
+
   <van-field readonly>
     <template #label>
       <strong style="font-size: large;">菜品:</strong>
@@ -45,19 +48,33 @@ import axios from '../api/api'
 import { reactive, toRefs, watch } from 'vue'
 
 export default {
-  props: ['order'],
-  setup(props) {
+  props: ['order', 'type'],
+  emits: ['changeOrder'],
+  setup(props, ctx) {
     const data = reactive({
       dishes: [],
-      totalPrice: 0
+      totalPrice: 0,
+      buttonText: ''
     })
 
     watch(
       () => props.order,
       (order, preOrder) => {
+        const people = localStorage.getItem('identity')
+        switch (props.type) {
+          case 0:
+            data.buttonText = people === '0' ? '取消' : people === '1' ? '接单' : ''
+            break
+          case 1:
+            data.buttonText = people === '0' ? '完成' : ''
+            break
+          default:
+            break
+        }
         console.log(order)
-        axios.post('getOrderInfo', {
-          order_id: order.id
+        const orderId = order.id ? order.id : order.order_id
+        axios.post('/getOrderInfo', {
+          order_id: orderId
         }).then((response) => {
           switch (response.data.status) {
             case 0:
@@ -78,7 +95,11 @@ export default {
       { immediate: true }
     )
 
-    return { ...toRefs(data) }
+    function onClick() {
+      ctx.emit('changeOrder', props.type)
+    }
+
+    return { ...toRefs(data), onClick }
   }
 }
 </script>

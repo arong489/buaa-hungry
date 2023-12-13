@@ -3,8 +3,8 @@
     <van-tree-select :main-active-index="activeIndex" :items="items" @click-nav="navClick" height="calc(100vh - 264px)">
       <template #content>
         <div v-if="dishes.length > 0">
-          <van-card v-for="dish of dishes" :title="dish.name" :key="`dish${dish.id}`" :price="dish.price"
-            :desc="dish.description" :thumb="dish.img">
+          <van-card v-for="(dish, index) of dishes" :title="dish.name" :key="`dish${dish.id}`" :price="dish.price"
+            :desc="dish.description" :thumb="dish.img" @click="onClick(index)">
             <template #num>
               <van-stepper v-model="dishCounts[dish.id]" theme="round" min="0" default-value="0" :integer="true"
                 button-size="22" @change="onChange(dish.id)" @plus="cartNum++" @minus="cartNum--" />
@@ -14,6 +14,13 @@
         <van-empty v-else description="暂无菜品" />
       </template>
     </van-tree-select>
+
+    <van-popup v-model:show="showDetail" position="bottom" :close-on-click-overlay='false'
+      @click-overlay="showDetail = false" :closeable="true" close-icon-position="top-left" close-icon="arrow-left"
+      style="height: 100%;">
+      <DishDetail :dish="dishDetail" />
+    </van-popup>
+
     <van-action-bar>
       <van-action-bar-icon icon="cart-o" text="购物车" :badge="cartNum" @click="toCart" />
       <van-action-bar-button type="warning" text="加入购物车" @click="AddCart()" />
@@ -25,10 +32,11 @@
 <script>
 import { reactive, toRefs } from '@vue/reactivity'
 // import FoodAdd from '../../../components/FoodAdd.vue'
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import axios from '../../../api/api.js'
 import { Toast } from 'vant'
 import { useRouter } from 'vue-router'
+import DishDetail from '@/components/DishDetail.vue'
 
 export default {
   props: ['canteensInf', 'modelValue'],
@@ -39,11 +47,12 @@ export default {
       activeIndex: 0,
       dishes: [],
       dishCounts: {},
-      cartNum: 0
-      // subItem: []
+      cartNum: 0,
+      dishDetail: {},
+      showDetail: false
     })
-    const router = useRouter()
 
+    const router = useRouter()
     // 点击左侧导航
     const navClick = (i) => {
       axios.post('/getAvDishes', { id: props.canteensInf[i].id }).then((response) => {
@@ -63,6 +72,11 @@ export default {
         Toast.fail('请求异常')
         console.log(error)
       })
+    }
+
+    function onClick(index) {
+      data.dishDetail = data.dishes[index]
+      data.showDetail = true
     }
 
     function toCart() {
@@ -98,10 +112,8 @@ export default {
       } else {
         emitValue[dishId] = data.dishCounts[dishId]
       }
-
       ctx.emit('update:modelValue', emitValue)
     }
-
     onMounted(async () => {
       if (props.canteensInf.length !== 0) {
         axios.request({
@@ -128,15 +140,16 @@ export default {
       }
       console.log('mount food list')
     })
-
     return {
       ...toRefs(data),
       navClick,
       onChange,
       AddCart,
-      toCart
+      toCart,
+      onClick
     }
-  }
+  },
+  components: { DishDetail }
 }
 </script>
 

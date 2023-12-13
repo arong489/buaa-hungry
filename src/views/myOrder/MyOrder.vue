@@ -50,7 +50,7 @@
           <van-empty description="没有订单" v-else />
         </van-tab>
         <van-tab :title="value" v-for="(value, index) in navData" :key="index">
-          <div v-if="orderData[index].length > 0">
+          <div v-if="orderData[index].length > 0" style="margin-top: var(--van-padding-xs);">
             <van-card v-for="(order, orderIndex) in orderData[index]" :key="order.id"
               @click="showOrderDetail(index, orderIndex)">
               <template #title>
@@ -71,8 +71,8 @@
         </van-tab>
       </van-tabs>
       <van-popup v-model:show="showDetail" round position="bottom" :close-on-click-overlay='false'
-        @click-overlay="showDetail = false">
-        <OrderDetail :order="orderDetail" />
+        @click-overlay="showDetail = false" :closeable="true">
+        <OrderDetail :order="orderDetail" :type="orderType" @changeOrder="changeOrder" />
       </van-popup>
     </div>
     <MyFooter />
@@ -87,7 +87,7 @@ import { useStore } from 'vuex'
 import { onMounted, computed } from 'vue'
 import axios from '../../api/api'
 import { Toast } from 'vant'
-import OrderDetail from '@/components/OrderDetail.vue'
+import OrderDetail from '../../components/OrderDetail.vue'
 
 export default {
   components: {
@@ -102,8 +102,11 @@ export default {
       navData: ['未接单', '配送中', '交易完成'],
       orderData: [[], [], []],
       showDetail: false,
-      orderDetail: {}
+      orderDetail: {},
+      orderType: 0
     })
+
+    let OrderIndex = 0
 
     const tabClick = (i) => {
       console.log(i)
@@ -111,7 +114,62 @@ export default {
 
     function showOrderDetail(type, index) {
       data.orderDetail = data.orderData[type][index]
+      data.orderType = type
+      OrderIndex = index
       data.showDetail = true
+    }
+
+    function changeOrder(type) {
+      event.stopPropagation()
+      if (type === 0) {
+        axios.post('/cancelOrder', { order_id: data.orderDetail.id }).then((response) => {
+          switch (response.data.status) {
+            case -2:
+              break
+            case 0:
+              Toast.success('订单已经删除')
+              data.orderData[0].splice(OrderIndex, 1)
+              data.showDetail = false
+              break
+            case 1:
+              Toast.success('订单不存在')
+              break
+            default:
+              Toast.fail('未知错误')
+              break
+          }
+        })
+      } else if (type === 1) {
+        axios.put('/finishOrder', { order_id: data.orderDetail.id }).then((response) => {
+          switch (response.data.status) {
+            case -2:
+              break
+            case 0:
+              Toast.success('订单已完成')
+              // 添加新信息, 并移动页面元素
+              data.orderData[1][OrderIndex].finish_time = getCurTime()
+              data.orderData[2].push(data.orderData[1][OrderIndex])
+              data.orderData[1].splice(OrderIndex, 1)
+              data.showDetail = false
+              break
+            case 1:
+              Toast.success('订单状态错误')
+              break
+            default:
+              Toast.fail('未知错误')
+              break
+          }
+        })
+      }
+    }
+
+    function getCurTime() {
+      const finishTime = new Date()
+      return finishTime.getFullYear().toString() + '-' +
+        (finishTime.getMonth() + 1) + '-' +
+        (finishTime.getDate().toString()) + ' ' +
+        (finishTime.getHours().toString()) + ':' +
+        finishTime.getMinutes().toString()
     }
 
     onMounted(() => {
@@ -157,7 +215,8 @@ export default {
       store,
       tabClick,
       showOrderDetail,
-      allOrders
+      allOrders,
+      changeOrder
     }
   }
 }
