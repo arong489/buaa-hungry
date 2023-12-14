@@ -1,158 +1,212 @@
 <template>
-  <div class="home">
+  <div class="order">
+    <MyHeader title="订单" />
     <div class="content">
-      <div class="header">
-        <div class="title">外卖</div>
-        <div class="text">
-          <van-icon name="location-o" />
-          校园食堂外卖
-          <van-icon name="arrow" />
-        </div>
-      </div>
-      <div class="main">
-        <div class="classify">
-          <div class="big_classify">
-            <div v-for="i in big_classify" :key="i.name">
-              <svg class="icon svg-icon" aria-hidden="true">
-                <use :xlink:href="`${i.icon}`"></use>
-              </svg>
-              {{i.name}}
-            </div>
+      <van-tabs>
+        <van-tab title="全部" :key="navData.length">
+          <div v-if="allOrders > 0" style="margin-top: var(--van-padding-xs);">
+            <van-card v-for="(order, index) in orderData[0]" :key="order.id" @click="showOrderDetail(0, index)">
+              <template #title>
+                <p><strong>目的地: </strong>{{ order.destination }}</p>
+              </template>
+              <template #desc>
+                <p><strong>期望送达时间: </strong>{{ order.expected_finish_time }}</p>
+              </template>
+              <template #tags>
+                <van-tag type="primary">未接单</van-tag>
+              </template>
+            </van-card>
+            <van-card v-for="(order, index) in orderData[1]" :key="order.id" @click="showOrderDetail(1, index)">
+              <template #title>
+                <p><strong>目的地: </strong>{{ order.destination }}</p>
+              </template>
+              <template #desc>
+                <p>
+                  <strong>期望送达时间: </strong>{{ order.expected_finish_time }}<br>
+                </p>
+              </template>
+              <template #tags>
+                <van-tag type="waring">配送中</van-tag>
+              </template>
+            </van-card>
+            <van-card v-for="(order, index) in orderData[2]" :key="order.id" @click="showOrderDetail(2, index)">
+              <template #title>
+                <p><strong>目的地: </strong>{{ order.destination }}</p>
+              </template>
+              <template #desc>
+                <p>
+                  <strong>期望送达时间: </strong>{{ order.expected_finish_time }}<br>
+                </p>
+              </template>
+              <template #tags>
+                <van-tag type="success">已完成</van-tag>
+              </template>
+            </van-card>
           </div>
-          <div class="small_classify">
-            <div v-for="(i,index) in small_classify" :key="index">
-              <svg class="icon svg-icon" aria-hidden="true">
-                <use :xlink:href="`${i.icon}`"></use>
-              </svg>
-              {{i.name}}
-            </div>
+          <van-empty description="没有订单" v-else />
+        </van-tab>
+        <van-tab :title="value" v-for="(value, index) in navData" :key="index">
+          <div v-if="orderData[index].length > 0" style="margin-top: var(--van-padding-xs);">
+            <van-card v-for="(order, orderIndex) in orderData[index]" :key="order.id"
+              @click="showOrderDetail(index, orderIndex)">
+              <template #title>
+                <p><strong>目的地: </strong>{{ order.destination }}</p>
+              </template>
+              <template #desc>
+                <p>
+                  <strong>期望送达时间: </strong>{{ order.expected_finish_time }}<br>
+                  <span v-if="order.staff_id">
+                    <strong>配送员: </strong>{{ order.staff_name }}<br>
+                    <strong>电话: </strong>{{ order.staff_tele }}
+                  </span>
+                </p>
+              </template>
+            </van-card>
           </div>
-        </div>
-
-        <van-tabs class="van-tabs">
-          <van-tab :title="i.tab" v-for="(i,index) in centent_nav_list" :key="index">
-            <RiderStore :store_list='i.data'/>
-          </van-tab>
-
-        </van-tabs>
-      </div>
+          <van-empty description="没有订单" v-else />
+        </van-tab>
+      </van-tabs>
+      <van-popup v-model:show="showDetail" round position="bottom" :close-on-click-overlay='false'
+        @click-overlay="showDetail = false" :closeable="true" style="100%">
+        <OrderDetail :order="orderDetail" :type="orderType" @changeOrder="changeOrder" />
+      </van-popup>
     </div>
-
     <MyFooterforRider />
-
   </div>
 </template>
 
 <script>
-import RiderStore from './components/RiderStore.vue'
-import MyFooterforRider from '../../components/MyFooterforRider.vue'
 import { reactive, toRefs } from '@vue/reactivity'
-// @ is an alias to /src
+import MyFooterforRider from '../../components/MyFooterforRider.vue'
+import MyHeader from '../../components/MyHeader.vue'
+import { useStore } from 'vuex'
+import { onMounted, computed } from 'vue'
+import axios from '../../api/api'
+import { Toast } from 'vant'
+import OrderDetail from '../../components/OrderDetail.vue'
 
 export default {
-  name: 'HomeViewforRider',
   components: {
-    RiderStore,
-    MyFooterforRider
+    MyFooterforRider,
+    MyHeader,
+    OrderDetail
   },
-  setup () {
+
+  setup() {
+    const store = useStore()
     const data = reactive({
-      centent_nav_list: [                       //此处为提供外卖服务的几个地点的展示
-        {
-          tab: '订单',
-          data: [
-            {
-              pic: 'https://5b0988e595225.cdn.sohucs.com/images/20180904/c46bb31bd1b240b792ef2a40816c7b9a.jpeg',
-              title: '沙河订单',
-              price: '20',
-            },
-            {
-              pic: 'https://img1.baidu.com/it/u=3211807031,2781908075&fm=253&fmt=auto&app=138&f=JPEG?w=667&h=500',
-              title: '学院路学二订单',
-              price: '20',
-            },
-            {
-              pic: 'https://pic2.zhimg.com/80/v2-265affebcd2c3c966e49afd8a0c3b501_720w.webp',
-              title: '学院路合一订单',
-              price: '20',
-            },
-            {
-              pic: 'https://img1.baidu.com/it/u=1313264085,1652997716&fm=253&fmt=auto&app=138&f=JPEG?w=845&h=500',
-              title: '学院路新北订单',
-              price: '20',
-            }
-          ]
-        },
-      ]
+      navData: ['未接单', '配送中', '交易完成'],
+      orderData: [[], [], []],
+      showDetail: false,
+      orderDetail: {},
+      orderType: 0
+    })
+
+    let OrderIndex = 0
+    const tabClick = (i) => {
+      console.log(i)
+    }
+
+    function showOrderDetail(type, index) {
+      data.orderDetail = data.orderData[type][index]
+      data.orderType = type
+      OrderIndex = index
+      data.showDetail = true
+    }
+
+    function changeOrder(type) {
+      if (type === 0) {
+        axios.put('/takeOrder', {
+          order_id: data.orderDetail.order_id
+        }).then((response) => {
+          switch (response.data.status) {
+            case -2:
+              break
+            case 0:
+              Toast.success('订单已接收')
+              const tempOrder = data.orderData[0][OrderIndex]
+              data.orderData[0].splice(OrderIndex, 1)
+              data.orderData[1].push(tempOrder)
+              data.showDetail = false
+              break
+            case 1:
+              Toast.success('订单状态错误')
+              break
+            default:
+              Toast.fail('未知错误')
+              break
+          }
+        })
+      }
+    }
+
+    onMounted(() => {
+      axios.get('/getOrders').then((response) => {
+        if (response.data.status !== -2) {
+          if (response.data.status !== 0) {
+            Toast.fail('未知错误')
+          } else {
+            data.orderData[0] = response.data.orders
+          }
+        }
+      })
+      axios.get('/getDeliveryOrder').then((response) => {
+        if (response.data.status !== -2) {
+          if (response.data.status !== 0) {
+            Toast.fail('未知错误')
+          } else {
+            data.orderData[1] = response.data.orders
+          }
+        }
+      })
+      axios.get('/getStaffHistoryOrder').then((response) => {
+        if (response.data.status !== -2) {
+          if (response.data.status !== 0) {
+            Toast.fail('未知错误')
+          } else {
+            data.orderData[2] = response.data.orders
+          }
+        }
+      })
+    })
+
+    const allOrders = computed(() => {
+      let temp = 0
+      data.orderData.forEach(element => {
+        temp += element.length
+      })
+      return temp
     })
 
     return {
-      ...toRefs(data)
+      ...toRefs(data),
+      store,
+      tabClick,
+      showOrderDetail,
+      allOrders,
+      changeOrder
     }
   }
-
 }
 </script>
 
 <style lang="less" scoped>
-.home{
+.order {
   height: 100%;
   display: flex;
   flex-flow: column;
-  .content{
+
+  .content {
     flex: 1;
     overflow-y: auto;
+    position: relative;
   }
-  .main {
-    font-size: 12px;
+}
 
-    .classify {
-      padding: 10px;
-
-      .small_classify {
-        display: flex;
-        flex-wrap: wrap; /** 超出可以换行*/
-        margin-top: 20px;
-
-        div {
-          display: flex;
-          width: 20%;
-          justify-content: center; /**可以水平居中显示 */
-          align-items: center; /*垂直居中*/
-          flex-flow: column; /**方向是垂直方向 */
-
-          .svg-icon {
-            width: 30px;
-            height: 30px;
-            margin-bottom: 5px;
-          }
-        }
-      }
-
-      .big_classify {
-        display: flex;
-
-        div {
-          flex: 1; /** 均分 */
-          display: flex;
-          justify-content: center; /**可以水平居中显示 */
-          align-items: center; /*垂直居中*/
-          flex-flow: column; /**方向是垂直方向 */
-
-          .svg-icon {
-            width: 50px;
-            height: 50px;
-            margin-bottom: 5px;
-          }
-        }
-      }
-    }
-  }
-  .header{
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    background-image:linear-gradient(#0099cc,#33cccc);
+div {
+  .van-card {
+    background-color: white;
+    border-radius: 10px;
   }
 }
 </style>

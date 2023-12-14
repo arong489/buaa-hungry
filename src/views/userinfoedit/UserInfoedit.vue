@@ -20,6 +20,7 @@ import MyHeader from '../../components/MyHeader.vue'
 import { useRouter } from 'vue-router'
 import { Toast } from 'vant'
 import axios from '../../api/api'
+
 export default {
   components: { MyHeader },
   setup() {
@@ -33,25 +34,29 @@ export default {
     // 保存
     const submit = () => {
       if (data.pwdOld && data.pwdAgain && data.pwdNew) {
-        axios.put('/resetPassword', {
-          old: data.pwdOld,
-          new: data.pwdNew,
-          again: data.pwdAgain
-        }).then((response) => {
-          switch (response.data.status) {
-            case 0:
-              Toast.success('密码修改成功')
-              break
-            case 1:
-              Toast.fail('原密码错误')
-              break
-            case 2:
-              Toast.fail('两次输入新密码不一致')
-              break
-            default:
-              break
-          }
-        })
+        if (data.pwdOld === data.pwdNew) {
+          Toast.fail('新旧密码不能相同')
+        } else {
+          axios.put('/resetPassword', {
+            old: data.pwdOld,
+            new: data.pwdNew,
+            again: data.pwdAgain
+          }).then((response) => {
+            switch (response.data.status) {
+              case 0:
+                Toast.success('密码修改成功')
+                break
+              case 1:
+                Toast.fail('原密码错误')
+                break
+              case 2:
+                Toast.fail('两次输入新密码不一致')
+                break
+              default:
+                break
+            }
+          })
+        }
       } else {
         Toast('请输入你修改的值')
       }

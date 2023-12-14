@@ -7,6 +7,7 @@ import {
 } from 'vue-router'
 import HomeView from '../views/myHome/HomeView.vue'
 import HomeviewforRider from '@/views/myHome/HomeviewforRider.vue'
+import HomeViewCanteen from "@/views/myHome/HomeViewCanteen.vue";
 
 const routes = [{
   path: '/',
@@ -24,6 +25,11 @@ const routes = [{
   name: 'homeRider',
   component: HomeviewforRider
 },
+{
+  path: '/homeCanteen',
+  name: 'homeCanteen',
+  component: HomeViewCanteen
+},
 /// //////////////////
 {
   path: '/cart',
@@ -39,6 +45,24 @@ const routes = [{
   name: 'mine',
   component: () =>
     import('../views/mine/MyMine.vue'),
+  meta: {
+    isAuth: true
+  }
+},
+{
+  path: '/mineCanteen',
+  name: 'mineCanteen',
+  component: () =>
+    import('../views/mine/MyCanteenMine.vue'),
+  meta: {
+    isAuth: true
+  }
+},
+{
+  path: '/mineRider',
+  name: 'mineRider',
+  component: () =>
+    import('../views/mine/MyRiderMine.vue'),
   meta: {
     isAuth: true
   }
@@ -70,13 +94,6 @@ const routes = [{
     import('../views/mystores/MyStore.vue')
 },
 
-/// ////////////////////////////////////////
-{
-  path: '/store-rider',
-  name: 'store-rider',
-  component: () =>
-    import('../views/mystores/RiderStore.vue')
-},
 /// ////////////////////////////////////////
 
 {
@@ -119,6 +136,12 @@ const routes = [{
     import('../views/register/MyRegister.vue')
 },
 {
+  path: '/registerForDish',
+  name: 'registerForDish',
+  component: () =>
+    import('../views/myHome/RigisterForDish.vue')
+},
+{
   path: '/userinfoedit',
   name: 'userinfoedit',
   component: () =>
@@ -139,7 +162,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   if (to.meta.isAuth) {
-    if (localStorage.isLogin === '1') {
+    if (localStorage.getItem('token')) {
       next()
     } else {
       Toast('请登录')

@@ -5,15 +5,21 @@
       <div class="img"></div>
       <div class="main">
         <div class="name">
-          <div class="title">{{ title }}</div>
+          <div class="title">{{ description }}</div>
           <img :src="img">
         </div>
         <div class="classify">
           <van-tabs>
             <van-tab title="点餐">
-              <FoodList v-if="canteensInf?.length > 0" :canteensInf="canteensInf" v-model="cart" />
+              <FoodList v-if="canteensInf?.length > 0" :canteensInf="canteensInf" :activeIndex="canteenIndex"
+                v-model="cart" @selectCanteen="selectCanteen" />
+              <van-empty v-else description="暂无餐厅" />
             </van-tab>
-            <van-tab title="简介"></van-tab>
+            <van-tab title="评论">
+              <Comment v-if="canteensInf?.length > 0" :canteensInf="canteensInf" :activeIndex="canteenIndex"
+                @selectCanteen="selectCanteen" />
+              <van-empty v-else description="暂无餐厅" />
+            </van-tab>
           </van-tabs>
         </div>
       </div>
@@ -22,34 +28,36 @@
 </template>
 
 <script>
-import { reactive, toRefs } from '@vue/reactivity'
+import { reactive, toRefs, onMounted } from 'vue'
 import Myheader from '../../components/MyHeader.vue'
 import FoodList from './commponents/FoodList.vue'
 import Comment from './commponents/Comment.vue'
 import { Toast } from 'vant'
 import { useStore } from 'vuex'
 import axios from '../../api/api'
-import { onMounted } from 'vue'
 export default {
   components: {
     Myheader,
-    // Comment,
+    Comment,
     FoodList
   },
   setup() {
     const store = useStore()
     const data = reactive({
-      title: 'Canteen',
+      description: '',
       // 食堂图片（最右）
-      img: 'https://5b0988e595225.cdn.sohucs.com/images/20191206/1d819332644641c7800feef9eaa2eef5.jpeg',
+      img: '',
       canteensInf: [],
-      cart: {}
+      cart: {},
+      canteenIndex: 0
     })
 
     onMounted(async () => {
       data.canteensInf = await axios.get('/getAllCanteens').then(async (response) => {
         switch (response.data.status) {
           case 0:
+            data.img = response.data.canteens[0].img
+            data.description = response.data.canteens[0].description
             return response.data.canteens
           default:
             Toast.fail('未知错误')
@@ -60,11 +68,16 @@ export default {
       console.log('mount my store')
     })
 
+    function selectCanteen(index) {
+      data.canteenIndex = index
+      data.img = data.canteensInf[index].img
+      data.description = data.canteensInf[index].description
+    }
+
     return {
       ...toRefs(data),
-      // AddCart,
+      selectCanteen,
       store
-      // clickBuy,
     }
   }
 }

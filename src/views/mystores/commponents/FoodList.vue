@@ -32,15 +32,15 @@
 <script>
 import { reactive, toRefs } from '@vue/reactivity'
 // import FoodAdd from '../../../components/FoodAdd.vue'
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import axios from '../../../api/api.js'
 import { Toast } from 'vant'
 import { useRouter } from 'vue-router'
 import DishDetail from '@/components/DishDetail.vue'
 
 export default {
-  props: ['canteensInf', 'modelValue'],
-  emits: ['update:modelValue'],
+  props: ['canteensInf', 'modelValue', 'activeIndex'],
+  emits: ['update:modelValue', 'selectCanteen'],
   setup(props, ctx) {
     const data = reactive({
       items: props.canteensInf.map((canteenInf) => ({ text: canteenInf.location })),
@@ -63,6 +63,7 @@ export default {
             response.data.dishes.forEach((dish) => {
               data.dishCounts[dish.id] += 0
             })
+            ctx.emit('selectCanteen', i)
             break
           default:
             Toast.fail('未知错误')
@@ -114,7 +115,31 @@ export default {
       }
       ctx.emit('update:modelValue', emitValue)
     }
+
+    watch(() => props.activeIndex, (index, oldIndex) => {
+      if (index !== data.activeIndex) {
+        axios.post('/getAvDishes', { id: props.canteensInf[index].id }).then((response) => {
+          switch (response.data.status) {
+            case 0:
+              data.dishes = response.data.dishes
+              data.activeIndex = index
+              response.data.dishes.forEach((dish) => {
+                data.dishCounts[dish.id] += 0
+              })
+              break
+            default:
+              Toast.fail('未知错误')
+              break
+          }
+        }).catch((error) => {
+          Toast.fail('请求异常')
+          console.log(error)
+        })
+      }
+    })
+
     onMounted(async () => {
+      data.activeIndex = props.activeIndex
       if (props.canteensInf.length !== 0) {
         axios.request({
           url: '/getAvDishes',

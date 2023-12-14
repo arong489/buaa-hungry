@@ -30,8 +30,15 @@ axios.interceptors.response.use(
         forbidClick: true
       })
       router.push('/login')
+    } else if (response.data.status === -1) {
+      Toast.fail({
+        message: '身份异常',
+        forbidClick: true
+      })
+      router.push('/login')
+    } else {
+      return response
     }
-    return response
   },
   error => {
     Toast.fail('请求异常')

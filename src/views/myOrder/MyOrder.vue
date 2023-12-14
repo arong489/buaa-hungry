@@ -71,7 +71,7 @@
         </van-tab>
       </van-tabs>
       <van-popup v-model:show="showDetail" round position="bottom" :close-on-click-overlay='false'
-        @click-overlay="showDetail = false" :closeable="true">
+        @click-overlay="showDetail = false" :closeable="true" style="height: 100%;">
         <OrderDetail :order="orderDetail" :type="orderType" @changeOrder="changeOrder" />
       </van-popup>
     </div>
