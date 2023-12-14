@@ -139,9 +139,14 @@ def login(request):
         #   非法身份
         status = 3
 
+    is_admin = False
+    if identity == Identity.BUYER:
+        if Admin.objects.filter(user_id=id).exists():
+            is_admin = True
     return JsonResponse({
         'status' : status,
-        'token' : msg2token(id, identity)
+        'token' : msg2token(id, identity),
+        'is_admin' : is_admin
     })
 
 
@@ -317,7 +322,9 @@ def add_dish_to_order(request):
     id = message['id']
     try:
         order = Order.objects.get(buyer_id=id,status=0)
+        print("yes")
     except:
+        print("no")
         order = Order(buyer_id=id,status=0)
         order.save()
 
@@ -1155,10 +1162,13 @@ def get_all_comments(request):
 
     comments = Comment.objects.all()
     comment_list = []
-    for i in comments:
+    for comment in comments:
         comment_list.append({
-            'comment_id' : i.id,
-            'content' : i.content
+            'comment_id': comment.id,
+            'nick_name': comment.user.nick_name,
+            'img': comment.user.img.img,
+            'content': comment.content,
+            'create_time': localtime(comment.create_time).strftime(DATE_TIME_FORMAT),
         })
 
     return JsonResponse({
@@ -1444,3 +1454,31 @@ def get_staff_info(request):
         'img': staff.img.img
     })
 
+
+@check_token(Identity.BUYER)
+def add_dishes_to_cart(request):
+    token = get_token(request)
+    msg = token2msg(token)
+    id = msg['id']
+
+    data = json.loads(request.body)
+    try:
+        order = Order.objects.get(buyer_id=id, status=0)
+        print("yes")
+    except:
+        print("no")
+        order = Order(buyer_id=id, status=0)
+        order.save()
+
+    #   dish_id = data['dish_id']
+    for i in data['dishes']:
+        dish_id = i['dish_id']
+        num = i['num']
+        try:
+            od = OrderDish.objects.get(order_id=order.id, dish_id=dish_id)
+            od.num += num
+        except:
+            od = OrderDish(order_id=order.id, dish_id=dish_id, num=num)
+            od.save()
+
+    return JsonResponse({'status': 0})

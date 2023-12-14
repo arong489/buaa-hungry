@@ -43,7 +43,7 @@ urlpatterns = [
     path('getFavorite', views.get_favorite),
 
     #   Admin
-    path('getAllComments', views.get_all_dishes),
+    path('getAllComments', views.get_all_comments),
     path('deleteComment', views.delete_comment),
 
     #   评论系统
@@ -70,6 +70,6 @@ urlpatterns = [
     path('getOrderInfo', views.get_order_info),
     path('judgeFavorite', views.judge_favorite),
     path('getCanteenInfo', views.get_canteen_info),
-    path('getStaffInfo', views.get_staff_info)
-
+    path('getStaffInfo', views.get_staff_info),
+    path('addDishesToCart', views.add_dishes_to_cart)
 ]

@@ -84,16 +84,26 @@ export default {
     }
 
     function AddCart(jump) {
+      const dishes = []
       Object.keys(props.modelValue).forEach(key => {
-        axios.post('/addDishToOrder', {
-          dish_id: key,
-          num: props.modelValue[key]
-        }).then((response) => {
-          if (response.data.status !== 0) {
-            Toast.fail('未知错误')
-          }
-        })
+        dishes.push({ dish_id: key, num: props.modelValue[key] })
         data.dishCounts[key] = 0
+      })
+      axios.post('/addDishesToCart', {
+        dishes: dishes
+      }).then((response) => {
+        switch (response.data.status) {
+          case 0:
+            Toast.success('已加入购物车')
+            break
+          case -1:
+            break
+          case -2:
+            break
+          default:
+            Toast.fail('未知错误')
+            break
+        }
       })
       // 清空
       data.cartNum = 0
