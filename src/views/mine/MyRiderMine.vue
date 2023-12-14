@@ -6,7 +6,7 @@
         <div class="info">
           <img :src="avatar.length > 0 ? avatar : '../../assets/user.svg'" @click="changeAvatar" />
           <van-uploader ref="uploader" max-count="1" v-show="false" v-model="avatarFile" :preview-image="false"
-                        :after-read="saveContent" @oversize="() => { alert('图片过大') }" />
+            :after-read="saveContent" @oversize="() => { alert('图片过大') }" />
           <div class="user-desc">
             <span>
               <h2>{{ name }}</h2>

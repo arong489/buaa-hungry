@@ -1,6 +1,6 @@
 <template>
   <div class="footer">
-    <router-link to="/order" class="item" active-class="nav_color">
+    <router-link to="/homeRider" class="item" active-class="nav_color">
       <van-icon name="label-o" size="30" />
       订单
     </router-link>

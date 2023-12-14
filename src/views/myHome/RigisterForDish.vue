@@ -6,7 +6,7 @@
       <div>
         <div class="avatar-container">
           <van-uploader class="avatar-container" name="img" @oversize="() => { alert('图片过大') }" v-model="avatar"
-                        max-count="1" label="avatar" :after-read="saveContent" />
+            max-count="1" label="avatar" :after-read="saveContent" />
         </div>
 
 
@@ -15,11 +15,11 @@
 
         <van-form inset @submit="onSubmit">
           <van-field v-model="DishName" :name="nameFieldArray[0]" :label="nameFieldArray[1]" type="text"
-                     :placeholder="nameFieldArray[2]" :rules="[{ required: true, message: nameFieldArray[2] }]" />
+            :placeholder="nameFieldArray[2]" :rules="[{ required: true, message: nameFieldArray[2] }]" />
           <van-field v-model="price" name="price" label="价格" type="text" placeholder="请输入售价"
-                     :rules="[{ required: true, message: '请输入售价' }]" />
+            :rules="[{ required: true, message: '请输入售价' }]" />
           <van-field v-model="description" name="description" rows="1" autosize label="菜品描述" type="textarea"
-                     placeholder="请输入菜品介绍" />
+            placeholder="请输入菜品介绍" />
           <div style="margin:16px">
             <van-button type="primary" native-type="submit" size="large" round style="margin-bottom:10px">添加</van-button>
             <van-button type="primary" size="large" round @click="backtoCanteen">返回</van-button>
@@ -54,7 +54,6 @@ export default {
     // 注册
     const register = () => {
       Toast('添加成功')
-      // localStorage.setItem('userInfo', JSON.stringify(value))
       router.push('/homeCanteen')
     }
 
@@ -70,7 +69,7 @@ export default {
     const onSubmit = (value) => {
       // const that = this
       value.img = avatarContent === undefined ? '' : avatarContent
-      value.tags=['好','辣']
+      value.tags = ['好', '辣']
       $axios.request({
         url: '/addDish',
         method: 'POST',

@@ -66,7 +66,6 @@ export default {
     // 注册
     const register = () => {
       Toast('注册成功')
-      // localStorage.setItem('userInfo', JSON.stringify(value))
       router.push('/login')
     }
 

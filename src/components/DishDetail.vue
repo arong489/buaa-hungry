@@ -5,12 +5,12 @@
   <strong style="color: red; font-size: 3ch;">{{ dish.price }}</strong>
   <van-tabs shrink>
     <van-tab title="详情">
-      <van-button v-if="modifyDish" @click="removeDish">
+      <van-button v-if="removeDishEnable" @click="removeDish" key="buttonClose">
         <template #icon>
           <van-icon name="close" size="2rem" />
         </template>
       </van-button>
-      <van-button @click="onClick">
+      <van-button @click="onClick" key="buttonModify" v-if="!isRider">
         <template #icon>
           <van-icon :name="buttonIcon" :color="buttonIconColor" size="2rem" />
         </template>
@@ -19,31 +19,38 @@
       <van-divider style="clear: both;" />
       <van-field readonly label="商品描述"><template #input>{{ dish.description }}</template></van-field>
     </van-tab>
-    <van-tab title="评论">
-      <van-field v-if="addCommentEnable" v-model="newComment" rows="1" autosize type="textarea" placeholder="点我输入评论">
-        <template #button>
-          <van-button type="primary" v-show="newComment.length > 0" @click="createComment">发表</van-button>
-        </template>
-      </van-field>
-      <van-card v-for="comment in dishComments" :key="`comment${comment.comment_id}`"
-        style="border-radius: 15px; margin: 10px;box-shadow: 5px 5px 5px #8e8d8d;" @click="showCommentDetail(comment)">
-        <template #thumb>
-          <img :src="comment.img" alt="头像缺失" style="aspect-ratio: 1; width: 50px; border-radius: 50%">
-        </template>
-        <template #title><strong style="font-size: 2.5ch">{{ comment.nick_name }}</strong><br></template>
-        <template #desc>
-          {{ comment.create_time }}
-        </template>
-        <template #bottom>
-          {{ comment.content }}
-        </template>
-      </van-card>
+    <van-tab title="评论" :disabled="isRider">
+      <div v-if="!isRider">
+        <van-field v-if="addCommentEnable" v-model="newComment" rows="1" autosize type="textarea" placeholder="点我输入评论">
+          <template #button>
+            <van-button type="primary" v-show="newComment.length > 0" @click="createComment">发表</van-button>
+          </template>
+        </van-field>
+        <van-card v-for="comment in dishComments" :key="`comment${comment.comment_id}`"
+          style="border-radius: 15px; margin: 10px;box-shadow: 5px 5px 5px #8e8d8d;" @click="showCommentDetail(comment)">
+          <template #thumb>
+            <img :src="comment.img" alt="头像缺失" style="aspect-ratio: 1; width: 50px; border-radius: 50%">
+          </template>
+          <template #title><strong style="font-size: 2.5ch">{{ comment.nick_name }}</strong><br></template>
+          <template #desc>
+            {{ comment.create_time }}
+          </template>
+          <template #bottom>
+            {{ comment.content }}
+          </template>
+        </van-card>
+      </div>
     </van-tab>
   </van-tabs>
 
   <van-popup v-model:show="ifShowCommentDetail" position="bottom" :close-on-click-overlay='false'
     @click-overlay="ifShowCommentDetail = false" :closeable="true" style="height: 100%;">
     <commentDetail :fatherComment="detailComment" />
+  </van-popup>
+
+  <van-popup v-if="removeDishEnable" v-model:show="ifShowDishModify" position="bottom" :close-on-click-overlay='false'
+    @click-overlay="ifShowDishModify = false" :closeable="true" style="height: 100%;">
+    <ModifyDish :dish="dish" @back="back" @dishModify="dishModify" />
   </van-popup>
 </template>
 
@@ -52,23 +59,27 @@ import { Toast } from 'vant'
 import axios from '../api/api'
 import { reactive, toRefs, watch } from 'vue'
 import commentDetail from './commentDetail.vue'
+import ModifyDish from '@/views/myHome/components/ModifyDish.vue'
 
 export default {
   props: ['dish'],
-  components: { commentDetail },
-  setup(props) {
+  emits: ['stopSale', 'dishModify'],
+  components: { commentDetail, ModifyDish },
+  setup(props, ctx) {
     const data = reactive({
       dishComments: [],
       imgStyle: {
         width: '100%'
       },
       newComment: '',
-      modifyDish: false,
       buttonIcon: '',
       buttonIconColor: '',
       ifShowCommentDetail: false,
       detailComment: {},
-      addCommentEnable: localStorage.getItem('identity') === '0'
+      removeDishEnable: localStorage.getItem('identity') === '2',
+      addCommentEnable: localStorage.getItem('identity') === '0',
+      isRider: localStorage.getItem('identity') === '1',
+      ifShowDishModify: false
     })
 
     function createComment() {
@@ -193,16 +204,17 @@ export default {
     }
 
     function modify() {
-      Toast('修改请在dishDetail 174行左右实现')
+      data.ifShowDishModify = true
     }
 
     function removeDish() {
       const tempDish = props.dish
       tempDish.available = false
-      axios.post('/delete_favorite', tempDish).then((response) => {
+      axios.post('/changeDish', tempDish).then((response) => {
         switch (response.data.status) {
           case 0:
             Toast.success('菜品已删除')
+            ctx.emit('stopSale')
             break
           case -2:
             break
@@ -211,6 +223,15 @@ export default {
             break
         }
       })
+    }
+
+    function back() {
+      data.ifShowDishModify = false
+    }
+
+    function dishModify(modifiedDish) {
+      ctx.emit('dishModify', modifiedDish)
+      data.ifShowDishModify = false
     }
 
     watch(
@@ -223,9 +244,10 @@ export default {
         } else {
           delete data.imgStyle['aspect-ratio']
         }
-        refreshComments(dish)
         const identity = localStorage.getItem('identity')
-        data.modifyDish = identity === '2'
+        if (identity !== '1') {
+          refreshComments(dish)
+        }
         const like = await checkLike(dish)
         data.buttonIcon = identity === '0' ? like ? 'like' : 'like-o' : identity === '2' ? 'more-o' : 'close'
         data.buttonIconColor = like ? '#ee0a24' : ''
@@ -240,7 +262,9 @@ export default {
       createComment,
       onClick,
       removeDish,
-      showCommentDetail
+      showCommentDetail,
+      back,
+      dishModify
     })
   }
 }
