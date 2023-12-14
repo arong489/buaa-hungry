@@ -20,13 +20,13 @@
       <van-field readonly label="商品描述"><template #input>{{ dish.description }}</template></van-field>
     </van-tab>
     <van-tab title="评论">
-      <van-field v-model="newComment" rows="1" autosize type="textarea" placeholder="点我输入评论">
+      <van-field v-if="addCommentEnable" v-model="newComment" rows="1" autosize type="textarea" placeholder="点我输入评论">
         <template #button>
           <van-button type="primary" v-show="newComment.length > 0" @click="createComment">发表</van-button>
         </template>
       </van-field>
       <van-card v-for="comment in dishComments" :key="`comment${comment.comment_id}`"
-        style="border-radius: 15px; margin: 10px;box-shadow: 5px 5px 5px #8e8d8d;">
+        style="border-radius: 15px; margin: 10px;box-shadow: 5px 5px 5px #8e8d8d;" @click="showCommentDetail(comment)">
         <template #thumb>
           <img :src="comment.img" alt="头像缺失" style="aspect-ratio: 1; width: 50px; border-radius: 50%">
         </template>
@@ -40,15 +40,22 @@
       </van-card>
     </van-tab>
   </van-tabs>
+
+  <van-popup v-model:show="ifShowCommentDetail" position="bottom" :close-on-click-overlay='false'
+    @click-overlay="ifShowCommentDetail = false" :closeable="true" style="height: 100%;">
+    <commentDetail :fatherComment="detailComment" />
+  </van-popup>
 </template>
 
 <script>
 import { Toast } from 'vant'
 import axios from '../api/api'
 import { reactive, toRefs, watch } from 'vue'
+import commentDetail from './commentDetail.vue'
 
 export default {
   props: ['dish'],
+  components: { commentDetail },
   setup(props) {
     const data = reactive({
       dishComments: [],
@@ -58,12 +65,15 @@ export default {
       newComment: '',
       modifyDish: false,
       buttonIcon: '',
-      buttonIconColor: ''
+      buttonIconColor: '',
+      ifShowCommentDetail: false,
+      detailComment: {},
+      addCommentEnable: localStorage.getItem('identity') === '0'
     })
 
     function createComment() {
       axios.post('/commentOnDish', {
-        dish_id: props.dish.id,
+        dish_id: props.dish.id ? props.dish.id : props.dish.dish_id,
         content: data.newComment
       }).then((response) => {
         switch (response.data.status) {
@@ -81,8 +91,13 @@ export default {
       })
     }
 
+    function showCommentDetail(comment) {
+      data.detailComment = comment
+      data.ifShowCommentDetail = true
+    }
+
     function refreshComments(dish) {
-      axios.post('/getDishComments', { dish_id: dish.id }).then((response) => {
+      axios.post('/getDishComments', { dish_id: dish.id ? dish.id : dish.dish_id }).then((response) => {
         switch (response.data.status) {
           case 0:
             data.dishComments = response.data.comments
@@ -102,7 +117,7 @@ export default {
       }
       let result = false
       await axios.post('/judgeFavorite', {
-        dish_id: dish.id
+        dish_id: dish.id ? dish.id : dish.dish_id
       }).then((response) => {
         switch (response.data.status) {
           case 0:
@@ -134,7 +149,7 @@ export default {
 
     function like() {
       axios.post('/favoriteDish', {
-        dish_id: props.dish.id,
+        dish_id: props.dish.id ? props.dish.id : props.dish.dish_id,
         note: ''
       }).then((response) => {
         switch (response.data.status) {
@@ -157,7 +172,7 @@ export default {
 
     function dislike() {
       axios.post('/deleteFavorite', {
-        dish_id: props.dish.id
+        dish_id: props.dish.id ? props.dish.id : props.dish.dish_id
       }).then((response) => {
         switch (response.data.status) {
           case 0:
@@ -224,7 +239,8 @@ export default {
       ...toRefs(data),
       createComment,
       onClick,
-      removeDish
+      removeDish,
+      showCommentDetail
     })
   }
 }

@@ -2,7 +2,7 @@
   <van-tree-select :main-active-index="activeIndex" :items="items" @click-nav="navClick" height="calc(100vh - 214px)">
 
     <template #content>
-      <van-field v-model="newComment" rows="1" autosize type="textarea" placeholder="点我输入评论">
+      <van-field v-if="addCommentEnable" v-model="newComment" rows="1" autosize type="textarea" placeholder="点我输入评论">
         <template #button>
           <van-button type="primary" v-show="newComment.length > 0" @click="inputFocus">发表</van-button>
         </template>
@@ -49,7 +49,8 @@ export default {
       activeIndex: 0,
       comments: [],
       newComment: '',
-      showDetail: false
+      showDetail: false,
+      addCommentEnable: localStorage.getItem('identity') === '0'
     })
 
     const navClick = (i) => {

@@ -38,23 +38,33 @@
     </template>
   </van-field>
   <van-card v-for="(dish, index) of dishes" :title="dish.name" :key="`dish${index}`" :price="dish.price"
-    :desc="dish.description" :thumb="dish.img" :num="dish.num">
+    :desc="dish.description" :thumb="dish.img" :num="dish.num" @click="showDishDetail(dish)">
   </van-card>
+
+  <van-popup v-model:show="ifShowDishDetail" position="bottom" :close-on-click-overlay='false'
+    @click-overlay="ifShowDishDetail = false" :closeable="true" style="height: 100%;" close-icon-position="top-left"
+    close-icon="arrow-left">
+    <DishDetail :dish="detailDish" />
+  </van-popup>
 </template>
 
 <script lang="js">
 import { Toast } from 'vant'
 import axios from '../api/api'
 import { reactive, toRefs, watch } from 'vue'
+import DishDetail from './DishDetail.vue'
 
 export default {
   props: ['order', 'type'],
   emits: ['changeOrder'],
+  components: { DishDetail },
   setup(props, ctx) {
     const data = reactive({
       dishes: [],
       totalPrice: 0,
-      buttonText: ''
+      buttonText: '',
+      ifShowDishDetail: false,
+      detailDish: {}
     })
 
     watch(
@@ -71,7 +81,6 @@ export default {
           default:
             break
         }
-        console.log(order)
         const orderId = order.id ? order.id : order.order_id
         axios.post('/getOrderInfo', {
           order_id: orderId
@@ -99,7 +108,12 @@ export default {
       ctx.emit('changeOrder', props.type)
     }
 
-    return { ...toRefs(data), onClick }
+    function showDishDetail(dish) {
+      data.detailDish = dish
+      data.ifShowDishDetail = true
+    }
+
+    return { ...toRefs(data), onClick, showDishDetail }
   }
 }
 </script>

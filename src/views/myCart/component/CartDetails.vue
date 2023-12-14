@@ -1,13 +1,20 @@
 <template>
   <div class="cartDetails" v-if="dishes.length > 0">
     <van-card v-for="(dish, key) in dishes" :title="dish.name" :key="`dish${dish.id}`" :price="dish.price"
-      :thumb="dish.img">
+      :thumb="dish.img" @click="showDishDetail(dish)">
       <template #num>
         <van-stepper v-model="dish.num" theme="round" min="0" :integer="true" button-size="22"
           @plus="onChange(false, key)" @minus="onChange(true, key)" />
         <!-- <van-button type="danger" icon="delete-o" size="mini" /> -->
       </template>
     </van-card>
+
+    <van-popup v-model:show="ifShowDishDetail" position="bottom" :close-on-click-overlay='false'
+      @click-overlay="ifShowDishDetail = false" :closeable="true" style="height: 100%;" close-icon-position="top-left"
+      close-icon="arrow-left">
+      <DishDetail :dish="detailDish" />
+    </van-popup>
+
     <van-submit-bar :price="totalPrice * 100" button-text="提交订单" class="submitall" :disabled="destination.length == 0"
       @submit="onSubmit">
       <template #tip>
@@ -38,7 +45,10 @@ import { computed, onMounted } from '@vue/runtime-core'
 import { useRouter } from 'vue-router'
 import { Toast } from 'vant'
 import axios from '../../../api/api'
+import DishDetail from '@/components/DishDetail.vue'
+
 export default {
+  components: { DishDetail },
   setup() {
     const router = useRouter()
     const store = useStore()
@@ -50,7 +60,9 @@ export default {
       expectDate: new Date(),
       destination: '',
       overShow: false,
-      minDate: new Date()
+      minDate: new Date(),
+      ifShowDishDetail: false,
+      detailDish: {}
     })
 
     function onChange(minus, index) {
@@ -113,6 +125,11 @@ export default {
       return value
     }
 
+    function showDishDetail(dish) {
+      data.detailDish = dish
+      data.ifShowDishDetail = true
+    }
+
     onMounted(() => {
       axios.get('/getCart').then(response => {
         if (response.data.status === 0) {
@@ -134,7 +151,8 @@ export default {
       addDetail,
       formatter,
       onSubmit,
-      formatDate
+      formatDate,
+      showDishDetail
     }
   }
 }

@@ -31,7 +31,6 @@
 
 <script>
 import { reactive, toRefs } from '@vue/reactivity'
-// import FoodAdd from '../../../components/FoodAdd.vue'
 import { onMounted, watch } from 'vue'
 import axios from '../../../api/api.js'
 import { Toast } from 'vant'

@@ -1365,6 +1365,7 @@ def get_order_info(request):
         dish = Dish.objects.get(id=j['dish_id'])
         total_price += dish.price * j['num']
         dishes.append({
+            'dish_id' : j['dish_id'],
             'name' : dish.name,
             'num' : j['num'],
             'description' : dish.description,
@@ -1372,18 +1373,6 @@ def get_order_info(request):
             'price' : dish.price
         })
 
-    '''
-    destination = '',
-    staff_name = '',
-    staff_tele = ''
-    if order.status == 1:
-        destination = order.destination,
-    else:
-        destination = order.destination,
-        staff_name = order.staff.real_name,
-        staff_tele = order.staff.tele
-    #   后三项直接为空
-    '''
     return JsonResponse({
         'status' : 0,
         'total_price' : total_price,
@@ -1429,15 +1418,6 @@ def judge_favorite(request):
 
 @check_token(Identity.CANTEEN)
 def get_canteen_info(request):
-    '''
-    "tele" : 119,
-"password" : "123456",
-"again" : "123456",
-"img" : "",
-"description" : "好吃",
-"location" : "新北",
-    '''
-
     token = get_token(request)
     msg = token2msg(token)
     id = msg['id']

@@ -13,7 +13,7 @@
     </template>
   </van-card>
 
-  <van-field v-model="newComment" rows="1" autosize type="textarea" placeholder="点我输入评论">
+  <van-field v-if="addCommentEnable" v-model="newComment" rows="1" autosize type="textarea" placeholder="点我输入评论">
     <template #button>
       <van-button type="primary" v-show="newComment.length > 0" @click="inputFocus">留言</van-button>
     </template>
@@ -50,7 +50,8 @@ export default {
     const data = reactive({
       activeIndex: 0,
       comments: [],
-      newComment: ''
+      newComment: '',
+      addCommentEnable: localStorage.getItem('identity') === '0'
     })
     const activeNames = ref(['1'])
 
