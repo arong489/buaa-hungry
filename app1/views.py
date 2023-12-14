@@ -210,17 +210,20 @@ def reset_picture(request):
     pic.save()
     if identity == Identity.BUYER:
         buyer = Buyer.objects.get(id=id)
+        old_pic_id = buyer.img_id
         buyer.img = pic
         buyer.save()
     elif identity == Identity.STAFF:
         staff = Staff.objects.get(id=id)
+        old_pic_id = staff.img_id
         staff.img = pic
         staff.save()
     elif identity == Identity.CANTEEN:
         canteen = Canteen.objects.get(id=id)
+        old_pic_id = canteen.img_id
         canteen.img = pic
         canteen.save()
-
+    Image.objects.get(id=old_pic_id).delete()
     return JsonResponse({'status' : status})
 
 
@@ -1081,8 +1084,7 @@ def change_dish(request):
         return JsonResponse({'status': -3})
 
     data = json.loads(request.body)
-    pic = Image(img=data['img'])
-    pic.save()
+
 
     dish_id = data['id']
     try:
@@ -1092,12 +1094,16 @@ def change_dish(request):
             'status' : 1,
             'msg' : '菜品不存在'
         })
+    old_pic_id = dish.img_id
+    pic = Image(img=data['img'])
+    pic.save()
     dish.name = data['name']
     dish.price = data['price']
     dish.description = data['description']
     dish.available = data['available']
     dish.img_id = pic.id
     dish.save()
+    Image.objects.get(id=old_pic_id).delete()
     return JsonResponse({'status' : 0})
 
 # 收藏功能
@@ -1479,6 +1485,6 @@ def add_dishes_to_cart(request):
             od.num += num
         except:
             od = OrderDish(order_id=order.id, dish_id=dish_id, num=num)
-            od.save()
+        od.save()
 
     return JsonResponse({'status': 0})

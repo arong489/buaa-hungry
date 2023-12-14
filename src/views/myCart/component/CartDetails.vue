@@ -66,6 +66,7 @@ export default {
     })
 
     function onChange(minus, index) {
+      event.stopPropagation()
       let num = Number(data.dishes[index].num)
       const dishId = data.dishes[index].id
       if (minus === true) {

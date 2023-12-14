@@ -7,7 +7,7 @@ import {
 } from 'vue-router'
 import HomeView from '../views/myHome/HomeView.vue'
 import HomeviewforRider from '@/views/myHome/HomeviewforRider.vue'
-import HomeViewCanteen from "@/views/myHome/HomeViewCanteen.vue";
+import HomeViewCanteen from '@/views/myHome/HomeViewCanteen.vue'
 
 const routes = [{
   path: '/',
@@ -152,7 +152,14 @@ const routes = [{
   name: 'favorite',
   component: () =>
     import('../views/myHome/favorite.vue')
+},
+{
+  path: '/commentmanger',
+  name: 'commentmanger',
+  component: () =>
+    import('../views/myHome/CommentManager.vue')
 }
+
 ]
 
 const router = createRouter({

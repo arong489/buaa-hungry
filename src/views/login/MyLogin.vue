@@ -71,6 +71,7 @@ export default {
             localStorage.setItem('isLogin', 1)
             localStorage.setItem('identity', data.identity)
             localStorage.setItem('token', response.data.token)
+            localStorage.setItem('is_admin', response.data.is_admin)
             data.identity === 0
               ? router.push('/home')
               : data.identity === 2

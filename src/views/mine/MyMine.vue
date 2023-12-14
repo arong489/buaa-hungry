@@ -27,6 +27,10 @@
           <span>我的收藏</span>
           <van-icon name="arrow" />
         </li>
+        <li class="van-hairline--bottom" @click="togo('./commentmanger')" v-if="isAdmin">
+          <span>评论管理</span>
+          <van-icon name="arrow" />
+        </li>
       </ul>
     </div>
     <MyFooter />
@@ -51,7 +55,8 @@ export default {
     const data = reactive({
       name: '',
       avatar: '',
-      avatarFile: []
+      avatarFile: [],
+      isAdmin: localStorage.getItem('is_admin') === 'true'
     })
 
     const uploader = ref(null)
