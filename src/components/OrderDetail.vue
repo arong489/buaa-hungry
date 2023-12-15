@@ -79,6 +79,7 @@ export default {
             data.buttonText = people === '0' ? '完成' : ''
             break
           default:
+            data.buttonText = ''
             break
         }
         const orderId = order.id ? order.id : order.order_id

@@ -26,7 +26,7 @@
                 </p>
               </template>
               <template #tags>
-                <van-tag type="waring">配送中</van-tag>
+                <van-tag type="warning">配送中</van-tag>
               </template>
             </van-card>
             <van-card v-for="(order, index) in orderData[2]" :key="order.id" @click="showOrderDetail(2, index)">

@@ -43,7 +43,9 @@ INSTALLED_APPS = [
 
 # 前端跨域白名单配置
 CORS_ORIGIN_WHITELIST = [
-    "http://localhost:8080"
+    "http://localhost:8080",
+    "http://localhost:8081",
+    "http://localhost:8082"
 ]
 CORS_ALLOW_HEADERS = [
     "accept",
