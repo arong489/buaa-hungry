@@ -23,8 +23,6 @@ pnpm-debug.log*
 *.sw?
 app1/__pycache__/urls.cpython-310.pyc
 app1/__pycache__/views.cpython-310.pyc
-*.puml
 *.pptx
-*.md
 *.drowio
 *.pdf

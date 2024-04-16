@@ -45,7 +45,8 @@ INSTALLED_APPS = [
 CORS_ORIGIN_WHITELIST = [
     "http://localhost:8080",
     "http://localhost:8081",
-    "http://localhost:8082"
+    "http://localhost:8082",
+    "http://localhost:8083"
 ]
 CORS_ALLOW_HEADERS = [
     "accept",
